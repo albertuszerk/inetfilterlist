@@ -1,1 +1,62 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>X-iNet Filter Konfigurator</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
 
+<div class="container">
+    <h1>X-iNet Filter Konfigurator</h1>
+    
+    <div class="stats-grid" id="global-stats">
+        <div class="stat-box">
+            <span class="stat-number" id="brutto-count">--</span>
+            Domains verarbeitet
+        </div>
+        <div class="stat-box">
+            <span class="stat-number" id="netto-count">--</span>
+            Einzigartige Filter
+        </div>
+        <div class="stat-box">
+            <span class="stat-number" id="last-update">--:--</span>
+            Letztes Update
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Quellen-Status (Ampel)</h3>
+        <div id="source-status-list">
+            <p>Lade Status-Informationen...</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>1. Schutz-Level waehlen</h3>
+        <p>Waehlen Sie die Kategorien aus, die blockiert werden sollen:</p>
+        <div class="category-group">
+            <label><input type="checkbox" id="cat-sex" checked> Sexuelle Inhalte (Adult)</label><br>
+            <label><input type="checkbox" id="cat-violence" checked> Gewalt & Extremismus</label><br>
+            <label><input type="checkbox" id="cat-vpn" checked> VPN & Proxy (Bypass-Schutz)</label><br>
+            <label><input type="checkbox" id="cat-gambling" checked> Gluecksspiel</label>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>2. Whitelist (Ausnahmen)</h3>
+        <p>Geben Sie Domains ein, die fuer Ihre Familie immer erreichbar sein muessen (eine pro Zeile):</p>
+        <textarea id="whitelist-input" placeholder="z.B. wikipedia.org"></textarea>
+    </div>
+
+    <button class="btn" id="generate-btn">Individuelle Filter-Datei erstellen</button>
+    
+    <p style="text-align: center; font-size: 0.8em; color: #7f8c8d; margin-top: 20px;">
+        Hinweis: Die Datei wird direkt in Ihrem Browser erstellt. Es werden keine privaten Daten an den Server gesendet.
+    </p>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
