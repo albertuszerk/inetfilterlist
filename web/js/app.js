@@ -1,4 +1,4 @@
-// app.js - X-iNet Filter Engine (Final Robust Version)
+// app.js - X-iNet Filter Engine (Robust Cache-Buster Version)
 let rawData = [];
 const BASE_RAW_URL = "https://raw.githubusercontent.com/albertuszerk/inetfilterlist/main/output/";
 
@@ -15,6 +15,7 @@ const FORMAT_FILES = {
 async function init() {
     document.getElementById('whitelist-input').value = localStorage.getItem('xinet_whitelist') || '';
     
+    // Event-Listener
     document.getElementById('limit-slider').addEventListener('input', (e) => {
         document.getElementById('limit-value').innerText = e.target.value;
         updateUI();
@@ -29,22 +30,24 @@ async function init() {
 
 async function loadStatus() {
     try {
-        const response = await fetch('../output/status.json');
+        // Cache-Buster (?v=...) zwingt den Browser zum Neuladen
+        const response = await fetch('../output/status.json?v=' + Date.now());
+        if (!response.ok) throw new Error("Status-Datei nicht gefunden");
         const data = await response.json();
         
-        // Stats befuellen (beachtet beide moegliche Key-Varianten)
-        const brutto = data.metadata.total_processed_brutto || data.metadata.brutto || 0;
-        const netto = data.metadata.total_unique_netto || data.metadata.netto || 0;
+        // beachtet verschiedene Key-Formate (total_processed_brutto vs brutto)
+        const bCount = data.metadata.total_processed_brutto || data.metadata.brutto || 0;
+        const nCount = data.metadata.total_unique_netto || data.metadata.netto || 0;
         
-        document.getElementById('brutto-count').innerText = brutto.toLocaleString('de-DE');
-        document.getElementById('netto-count').innerText = netto.toLocaleString('de-DE');
+        document.getElementById('brutto-count').innerText = bCount.toLocaleString('de-DE');
+        document.getElementById('netto-count').innerText = nCount.toLocaleString('de-DE');
         
         const catContainer = document.getElementById('dynamic-categories');
         const statusList = document.getElementById('source-status-list');
         catContainer.innerHTML = ''; 
         statusList.innerHTML = '';
 
-        // Kategorien extrahieren und vereinheitlichen
+        // Kategorien extrahieren
         const uniqueCats = [...new Set(data.sources.map(s => s.category.toLowerCase()))];
         uniqueCats.forEach(cat => {
             const label = cat.toUpperCase();
@@ -57,22 +60,27 @@ async function loadStatus() {
         data.sources.forEach(s => {
             statusList.innerHTML += `<div><span class="status-indicator status-${s.status}"></span> ${s.name}: ${s.count.toLocaleString('de-DE')}</div>`;
         });
-    } catch(e) { console.error("Status-Fehler", e); }
+    } catch(e) { 
+        console.error("Status-Fehler:", e);
+        document.getElementById('source-status-list').innerHTML = `<p style="color:red;">Status-Daten konnten nicht geladen werden.</p>`;
+    }
 }
 
 async function loadData() {
     try {
-        const response = await fetch('../output/xinet_data.json');
+        // Auch hier Cache-Buster verwenden
+        const response = await fetch('../output/xinet_data.json?v=' + Date.now());
+        if (!response.ok) throw new Error("Daten-Datei nicht gefunden");
         rawData = await response.json();
         updateUI();
     } catch(e) { 
-        console.error("Daten-Fehler", e);
-        document.getElementById('preview-area').innerText = "Warte auf Synchronisation der xinet_data.json (Datei noch 'Untracked')...";
+        console.error("Daten-Fehler:", e);
+        document.getElementById('preview-area').innerText = "Fehler beim Laden der xinet_data.json. Bitte Seite neu laden (F5).";
     }
 }
 
 function updateUI() {
-    if (rawData.length === 0) return;
+    if (!rawData || rawData.length === 0) return;
 
     const limit = parseInt(document.getElementById('limit-slider').value);
     const activeCats = Array.from(document.querySelectorAll('.cat-cb:checked')).map(cb => cb.value.toLowerCase());
@@ -81,10 +89,12 @@ function updateUI() {
     localStorage.setItem('xinet_whitelist', whitelistText);
     const whitelist = whitelistText.split('\n').map(s => s.trim().toLowerCase()).filter(s => s !== "");
 
-    // Filterung: Erzwingt Kleinschreibung beim Vergleich
-    const filtered = rawData.filter(item => 
-        activeCats.includes(item.c.toLowerCase()) && !whitelist.includes(item.d.toLowerCase())
-    ).slice(0, limit);
+    // Filter-Logik
+    const filtered = rawData.filter(item => {
+        const itemCat = (item.c || "").toLowerCase();
+        const itemDom = (item.d || "").toLowerCase();
+        return activeCats.includes(itemCat) && !whitelist.includes(itemDom);
+    }).slice(0, limit);
     
     document.getElementById('live-counter').innerText = filtered.length.toLocaleString('de-DE');
 
@@ -98,7 +108,7 @@ function renderPreview(data, format) {
     const max = 15;
     let text = `--- Vorschau (${format.toUpperCase()}) ---\n`;
     if (data.length === 0) {
-        text += "(Keine Domains fuer diese Auswahl gefunden - Bitte pruefen Sie die Checkboxen)";
+        text += "(Keine Domains fuer diese Auswahl gefunden)";
     } else {
         data.slice(0, max).forEach(i => {
             if (format === 'flint2') text += `||${i.d}^\n`;
@@ -114,17 +124,23 @@ function renderPreview(data, format) {
 }
 
 function downloadFile() {
+    if (!rawData || rawData.length === 0) { alert("Warte noch auf Daten..."); return; }
+    
     const format = document.getElementById('format-select').value;
     const activeCats = Array.from(document.querySelectorAll('.cat-cb:checked')).map(cb => cb.value.toLowerCase());
     const whitelist = document.getElementById('whitelist-input').value.split('\n').map(s => s.trim().toLowerCase()).filter(s => s !== "");
     const limit = parseInt(document.getElementById('limit-slider').value);
 
-    const data = rawData.filter(item => 
-        activeCats.includes(item.c.toLowerCase()) && !whitelist.includes(item.d.toLowerCase())
-    ).slice(0, limit);
+    const data = rawData.filter(item => {
+        const itemCat = (item.c || "").toLowerCase();
+        const itemDom = (item.d || "").toLowerCase();
+        return activeCats.includes(itemCat) && !whitelist.includes(itemDom);
+    }).slice(0, limit);
     
     let content = "";
     if (format === 'mikrotik') content = "/ip dns static\n";
+    else if (format === 'flint2') content = "! X-iNet Filter\n";
+
     data.forEach(i => {
         if (format === 'flint2') content += `||${i.d}^\n`;
         else if (format === 'mikrotik') content += `add address=127.0.0.1 name="${i.d}"\n`;
