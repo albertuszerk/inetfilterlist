@@ -1,72 +1,96 @@
 import yaml
 import os
+import json
+import time
+from datetime import datetime
+
+# Importe
 from core.normalizer import normalize_domain
 from core.master_table import MasterTable
 from core.hierarchy_processor import HierarchyProcessor
 from adapters.source_handler import SourceHandler
 from adapters.ranking_handler import RankingHandler
 from exporters.mikrotik_exporter import MikrotikExporter
+from exporters.fritzbox_exporter import FritzboxExporter
+from exporters.glinet_exporter import GlinetExporter
+from exporters.universal_exporter import UniversalExporter
+from exporters.advanced_exporter import AdvancedExporter
+from exporters.data_exporter import DataExporter
 
-def load_whitelist(file_path):
-    whitelist = set()
-    if os.path.exists(file_path):
-        with open(file_path, "r", encoding="utf-8") as f:
-            for line in f:
-                normalized = normalize_domain(line)
-                if normalized:
-                    whitelist.add(normalized)
-    return whitelist
+# --- KONFIGURATION DER LIMITS ---
+LIMITS = {
+    "mikrotik": 10000,
+    "flint2": 50000,
+    "fritzbox": 5000,
+    "pihole": 100000,
+    "hosts": 50000,
+    "unbound": 25000,
+    "dnsmasq": 25000,
+    "rpz": 25000,
+    "data": 100000 # JSON/CSV
+}
 
 def run_pipeline():
-    print("--- X-iNet Filter Generation: Start ---")
+    print(f"--- X-iNet Multi-Format Generation ---")
+    
     master_table = MasterTable()
-    source_handler = SourceHandler()
+    source_handler = SourceHandler(force_download=False)
     hierarchy_processor = HierarchyProcessor()
     
-    config_path = "data/default_sources.yaml"
-    whitelist_path = "data/whitelist.txt"
-    
-    with open(config_path, "r", encoding="utf-8") as f:
+    with open("data/default_sources.yaml", "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
     
-    print("Lade Ranking-Daten...")
-    ranking_cfg = config['ranking_sources'][0]
-    r_handler = RankingHandler(ranking_cfg['url'])
+    r_handler = RankingHandler(config['ranking_sources'][0]['url'])
     global_ranks = r_handler.fetch_rankings()
     
+    brutto_counter = 0
     for source in config['content_sources']:
         if not source.get('active', True): continue
-        print(f"Verarbeite Quelle: {source['name']}...")
-        if source['adapter'] == "tar_gz_parser":
-            domains = source_handler.fetch_tar_gz(source['url'])
-        else:
-            domains = source_handler.fetch_plain_text(source['url'])
-        print(f"  -> {len(domains)} Domains extrahiert.")
+        print(f"Verarbeite: {source['name']}...")
+        domains = source_handler.fetch_tar_gz(source['url']) if source['adapter'] == "tar_gz_parser" else source_handler.fetch_plain_text(source['url'])
+        brutto_counter += len(domains)
         for d in domains:
             master_table.add_domain(d, source['category'], global_ranks.get(d))
             
-    print("Wende Whitelist an...")
-    master_table.apply_whitelist(load_whitelist(whitelist_path))
-
-    print("Starte Hierarchie-Pruefung...")
+    # Veredelung
     all_raw = list(master_table.data.keys())
+    unique_count = len(all_raw)
     clean_list = hierarchy_processor.clean_redundancies(all_raw)
     master_table.data = {d: master_table.data[d] for d in clean_list}
     
-    # EXPORT-SEKTION
-    print("Erstelle Export-Datei fuer MikroTik...")
-    target_categories = ['sex', 'violence', 'vpn_proxy']
-    export_list = master_table.get_filtered_list(target_categories, limit=5000)
+    # EXPORTE
+    print("\nSchritt 4: Starte Multi-Format Export (10 Formate)...")
+    categories = ['sex', 'violence', 'vpn_proxy', 'gambling']
+    out = "output"
     
-    exporter = MikrotikExporter(output_dir="output")
-    success_file = exporter.export(export_list, filename="xinet_blocklist.rsc")
+    # 1-3: Bereits bekannt
+    MikrotikExporter(out).export(master_table.get_filtered_list(categories, limit=LIMITS["mikrotik"]), "xinet_mikrotik.rsc")
+    FritzboxExporter(out).export(master_table.get_filtered_list(categories, limit=LIMITS["fritzbox"]), "xinet_fritzbox.txt")
+    GlinetExporter(out).export(master_table.get_filtered_list(categories, limit=LIMITS["flint2"]), "xinet_flint2_adguard.txt")
     
-    if success_file:
-        print(f"ERFOLG: Datei erstellt unter {success_file}")
+    # 4-5: Universal
+    univ = UniversalExporter(out)
+    univ.export_hosts(master_table.get_filtered_list(categories, limit=LIMITS["hosts"]), "xinet_universal_hosts.txt")
+    univ.export_pihole(master_table.get_filtered_list(categories, limit=LIMITS["pihole"]), "xinet_pihole.txt")
     
-    print("\n--- Prozess abgeschlossen! ---")
-    print(f"Netto-Eintraege in Master-Table: {len(master_table.data)}")
-    print(f"Exportierte Domains: {len(export_list)}")
+    # 6-8: Advanced
+    adv = AdvancedExporter(out)
+    adv.export_dnsmasq(master_table.get_filtered_list(categories, limit=LIMITS["dnsmasq"]), "xinet_dnsmasq.conf")
+    adv.export_unbound(master_table.get_filtered_list(categories, limit=LIMITS["unbound"]), "xinet_unbound.conf")
+    adv.export_rpz(master_table.get_filtered_list(categories, limit=LIMITS["rpz"]), "xinet_rpz.zone")
+    
+    # 9-10: Data
+    dex = DataExporter(out)
+    dex.export_json(master_table.get_filtered_list(categories, limit=LIMITS["data"]), "xinet_data.json")
+    dex.export_csv(master_table.get_filtered_list(categories, limit=LIMITS["data"]), "xinet_data.csv")
+    
+    print(f"\n" + "="*45)
+    print(f"   X-iNET MULTI-EXPORT STATUS")
+    print(f"="*45)
+    print(f"Netto-Datenbank:   {len(master_table.data):,}".replace(",", "."))
+    print(f"Alle 10 Exporter erfolgreich abgeschlossen.")
+    print(f"Dateien befinden sich im Ordner '/output'.")
+    print(f"="*45)
 
 if __name__ == "__main__":
     run_pipeline()

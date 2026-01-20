@@ -1,0 +1,10 @@
+# Python-Müll ignorieren
+__pycache__/
+*.pyc
+
+# Den lokalen Download-Cache ignorieren (Roboter lädt selbst neu)
+cache/
+
+# Optionale lokale Testdateien
+test.txt
+output/test.txt

@@ -1,0 +1,45 @@
+{
+    "metadata": {
+        "timestamp": "2026-01-20 20:06",
+        "total_processed_brutto": 5106690,
+        "total_unique_netto": 4905100
+    },
+    "sources": [
+        {
+            "name": "UT1 Toulouse Violence",
+            "category": "violence",
+            "status": "green",
+            "count": 266
+        },
+        {
+            "name": "OISD NSFW (Adult)",
+            "category": "sex",
+            "status": "green",
+            "count": 372173
+        },
+        {
+            "name": "UT1 Toulouse Porn",
+            "category": "sex",
+            "status": "green",
+            "count": 4646981
+        },
+        {
+            "name": "UT1 VPN & Proxy",
+            "category": "vpn_proxy",
+            "status": "green",
+            "count": 6038
+        },
+        {
+            "name": "UT1 Gambling",
+            "category": "gambling",
+            "status": "green",
+            "count": 32197
+        },
+        {
+            "name": "OISD Basic Ads/Tracker",
+            "category": "ads_tracking",
+            "status": "green",
+            "count": 49035
+        }
+    ]
+}
