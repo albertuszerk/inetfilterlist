@@ -1,4 +1,4 @@
-// app.js - X-iNet Filter Engine (Finale Korrektur)
+// app.js - X-iNet Filter Engine (Final Fix)
 let rawData = [];
 const RAW_GITHUB_BASE = "https://raw.githubusercontent.com/albertuszerk/inetfilterlist/main/output/";
 
@@ -32,13 +32,13 @@ async function init() {
 
 async function loadStatus() {
     try {
-        // Pfad fuer GitHub Pages und Lokal: Eine Ebene zurueck
         const response = await fetch('../output/status.json');
         if (!response.ok) throw new Error("Status-Datei nicht gefunden");
         const data = await response.json();
         
-        document.getElementById('brutto-count').innerText = (data.metadata.brutto || 0).toLocaleString('de-DE');
-        document.getElementById('netto-count').innerText = (data.metadata.netto || 0).toLocaleString('de-DE');
+        // Korrektur der Feldnamen aus der main.py
+        document.getElementById('brutto-count').innerText = (data.metadata.total_processed_brutto || 0).toLocaleString('de-DE');
+        document.getElementById('netto-count').innerText = (data.metadata.total_unique_netto || 0).toLocaleString('de-DE');
         
         const catContainer = document.getElementById('dynamic-categories');
         const statusList = document.getElementById('source-status-list');
@@ -58,7 +58,6 @@ async function loadStatus() {
         });
     } catch(e) { 
         console.error("Status-Fehler:", e);
-        document.getElementById('source-status-list').innerHTML = `<p style="color:red;">Status-Daten konnten nicht geladen werden. Bitte prüfen Sie, ob die Datei im Repository existiert.</p>`;
     }
 }
 
@@ -70,7 +69,7 @@ async function loadData() {
         updateUI();
     } catch(e) { 
         console.error("Daten-Fehler:", e);
-        document.getElementById('preview-area').innerText = "Fehler: xinet_data.json konnte nicht geladen werden.";
+        document.getElementById('preview-area').innerText = "Warte auf Synchronisation der Daten...";
     }
 }
 
@@ -95,15 +94,19 @@ function updateUI() {
 function renderPreview(data, format) {
     const max = 15;
     let text = `--- Vorschau (${format.toUpperCase()}) ---\n`;
-    data.slice(0, max).forEach(i => {
-        if (format === 'flint2') text += `||${i.d}^\n`;
-        else if (format === 'mikrotik') text += `add address=127.0.0.1 name="${i.d}"\n`;
-        else if (format === 'hosts') text += `0.0.0.0 ${i.d}\n`;
-        else if (format === 'dnsmasq') text += `address=/${i.d}/\n`;
-        else if (format === 'unbound') text += `local-zone: "${i.d}" always_nxdomain\n`;
-        else text += `${i.d}\n`;
-    });
-    if (data.length > max) text += "...";
+    if (data.length === 0) {
+        text += "(Keine Domains fuer diese Auswahl gefunden)";
+    } else {
+        data.slice(0, max).forEach(i => {
+            if (format === 'flint2') text += `||${i.d}^\n`;
+            else if (format === 'mikrotik') text += `add address=127.0.0.1 name="${i.d}"\n`;
+            else if (format === 'hosts') text += `0.0.0.0 ${i.d}\n`;
+            else if (format === 'dnsmasq') text += `address=/${i.d}/\n`;
+            else if (format === 'unbound') text += `local-zone: "${i.d}" always_nxdomain\n`;
+            else text += `${i.d}\n`;
+        });
+        if (data.length > max) text += "...";
+    }
     document.getElementById('preview-area').innerText = text;
 }
 
