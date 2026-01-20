@@ -21,13 +21,13 @@
             Einzigartige Filter
         </div>
         <div class="stat-box">
-            <span class="stat-number" id="last-update">--:--</span>
-            Letztes Update
+            <span class="stat-number" id="live-counter">0</span>
+            Deine aktuelle Auswahl
         </div>
     </div>
 
     <div class="card">
-        <h3>Quellen-Status (Ampel)</h3>
+        <h3>Quellen-Status (Ampeln)</h3>
         <div id="source-status-list" class="status-container">
             <p>Lade Status-Informationen...</p>
         </div>
@@ -35,32 +35,40 @@
 
     <div class="card">
         <h3>1. Schutz-Level waehlen</h3>
-        <div class="category-group">
-            <label><input type="checkbox" id="cat-sex" checked> Sexuelle Inhalte (Adult)</label><br>
-            <label><input type="checkbox" id="cat-violence" checked> Gewalt & Extremismus</label><br>
-            <label><input type="checkbox" id="cat-vpn" checked> VPN & Proxy (Bypass-Schutz)</label><br>
-            <label><input type="checkbox" id="cat-gambling" checked> Gluecksspiel</label>
-        </div>
+        <p>Welche Kategorien sollen blockiert werden?</p>
+        <div id="dynamic-categories" class="category-group">
+            </div>
     </div>
 
     <div class="card">
         <h3>2. Whitelist (Ausnahmen)</h3>
-        <p>Domains, die fuer Ihre Familie immer erreichbar sein muessen:</p>
-        <textarea id="whitelist-input" placeholder="z.B. wikipedia.org (eine pro Zeile)"></textarea>
+        <textarea id="whitelist-input" placeholder="z.B. wikipedia.org (eine Domain pro Zeile)"></textarea>
     </div>
 
     <div class="card">
-        <h3>3. Ziel-System waehlen</h3>
+        <h3>3. Ziel-System & Direkt-Link</h3>
         <select id="format-select" class="custom-select">
             <option value="flint2">GL.iNet Flint 2 / AdGuard (||domain^)</option>
             <option value="mikrotik">MikroTik (.rsc Script)</option>
             <option value="fritzbox">Fritz!Box (Reine Liste)</option>
             <option value="hosts">Universal HOSTS (0.0.0.0)</option>
             <option value="pihole">Pi-hole (Reine Liste)</option>
+            <option value="dnsmasq">Dnsmasq (address=/.../)</option>
+            <option value="unbound">Unbound (local-zone)</option>
         </select>
+        
+        <div class="direct-link-box">
+            <strong>Direkt-Link fuer den Router:</strong>
+            <code id="direct-link-display">Waehle ein System...</code>
+        </div>
     </div>
 
-    <button class="btn" id="generate-btn">Individuelle Filter-Datei erstellen</button>
+    <div class="card">
+        <h3>Vorschau (Preview)</h3>
+        <pre id="preview-area" class="preview-box">Waehle Optionen aus, um eine Vorschau zu sehen...</pre>
+    </div>
+
+    <button class="btn" id="generate-btn">Konfiguration als Datei herunterladen</button>
 </div>
 
 <script src="js/app.js"></script>
