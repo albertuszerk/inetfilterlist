@@ -1,11 +1,11 @@
-// app.js - Die interaktive Filter-Engine
+// app.js - Die innovative Filter-Engine
 
-let rawData = []; // Die Basis-Daten mit Kategorien
+let rawData = [];
 
 async function init() {
     await loadStatus();
     await loadData();
-    // Whitelist aus dem Speicher laden
+    // Whitelist-Gedaechtnis aus dem Browser-Speicher
     document.getElementById('whitelist-input').value = localStorage.getItem('xinet_whitelist') || '';
 }
 
@@ -20,17 +20,17 @@ async function loadStatus() {
         const list = document.getElementById('source-status-list');
         list.innerHTML = '';
         d.sources.forEach(s => {
-            list.innerHTML += `<div style="margin-bottom:5px;"><span class="status-indicator status-${s.status}"></span> ${s.name}: ${s.count.toLocaleString('de-DE')}</div>`;
+            list.innerHTML += `<div><span class="status-indicator status-${s.status}"></span> ${s.name}: ${s.count.toLocaleString('de-DE')}</div>`;
         });
-    } catch(e) { console.error("Status konnte nicht geladen werden."); }
+    } catch(e) { console.error("Status-Ladefehler"); }
 }
 
 async function loadData() {
     try {
         const r = await fetch('../../output/xinet_data.json');
         rawData = await r.json();
-        console.log("Engine geladen: " + rawData.length + " Domains.");
-    } catch(e) { console.error("Daten-Engine Fehler."); }
+        console.log("Engine bereit: " + rawData.length + " Domains.");
+    } catch(e) { console.error("Daten-Ladefehler"); }
 }
 
 function generate() {
@@ -40,24 +40,39 @@ function generate() {
     if(document.getElementById('cat-vpn').checked) activeCats.push('vpn_proxy');
     if(document.getElementById('cat-gambling').checked) activeCats.push('gambling');
 
-    const whitelist = document.getElementById('whitelist-input').value.split('\n').map(s => s.trim().toLowerCase()).filter(s => s !== "");
-    localStorage.setItem('xinet_whitelist', document.getElementById('whitelist-input').value);
+    const whitelistStr = document.getElementById('whitelist-input').value;
+    localStorage.setItem('xinet_whitelist', whitelistStr);
+    const whitelist = whitelistStr.split('\n').map(s => s.trim().toLowerCase()).filter(s => s !== "");
 
-    // Filter-Prozess
+    // 1. Filtern
     const filtered = rawData.filter(item => activeCats.includes(item.c) && !whitelist.includes(item.d));
 
-    // Format-Wahl (Beispiel Flint 2)
-    let content = "! X-iNet Individueller Filter\n! Erstellt: " + new Date().toLocaleString() + "\n";
-    filtered.forEach(item => {
-        content += `||${item.d}^\n`;
-    });
+    // 2. Formatieren basierend auf Dropdown
+    const format = document.getElementById('format-select').value;
+    let content = "";
+    let fileName = "xinet_filter.txt";
 
-    // Download
+    if (format === 'flint2') {
+        content = "! X-iNet Filter fuer Flint 2\n";
+        filtered.forEach(i => content += `||${i.d}^\n`);
+    } else if (format === 'mikrotik') {
+        content = "/ip dns static\n";
+        filtered.forEach(i => content += `add address=127.0.0.1 name="${i.d}"\n`);
+        fileName = "xinet_mikrotik.rsc";
+    } else if (format === 'hosts') {
+        content = "# Universal HOSTS\n";
+        filtered.forEach(i => content += `0.0.0.0 ${i.d}\n`);
+    } else {
+        // Standard: Reine Liste (Fritzbox / Pi-hole)
+        filtered.forEach(i => content += `${i.d}\n`);
+    }
+
+    // 3. Download ausloesen
     const blob = new Blob([content], {type: 'text/plain'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'mein_xinet_filter.txt';
+    a.download = fileName;
     a.click();
 }
 
