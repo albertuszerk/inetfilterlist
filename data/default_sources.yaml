@@ -1,1 +1,44 @@
+# X-iNet Filter Master Configuration
+# Wichtig: Alle Einträge werden vom Algorithmus normalisiert (Kleinschreibung, ss statt ß)
 
+metadata:
+  version: "1.0.0"
+  last_updated: "2026-01-20"
+
+# Referenz-Listen für das Traffic-Ranking (Export-Limiter)
+ranking_sources:
+  - id: "tranco_top_1m"
+    name: "Tranco Global Top 1M"
+    url: "https://tranco-list.eu/top-1m.csv.zip"
+    type: "csv_ranking"
+    active: true
+
+# Die eigentlichen Inhalts-Quellen
+content_sources:
+  - id: "ut1_violence"
+    category: "violence"
+    name: "UT1 Toulouse Violence"
+    url: "https://dsi.ut-capitole.fr/blacklists/download/violence.tar.gz"
+    adapter: "tar_gz_parser"
+    active: true
+
+  - id: "oisd_nsfw"
+    category: "sex"
+    name: "OISD NSFW (Adult)"
+    url: "https://nsfw.oisd.nl/"
+    adapter: "plain_text_parser"
+    active: true
+
+  - id: "ut1_vpn"
+    category: "vpn_proxy"
+    name: "UT1 VPN & Proxy"
+    url: "https://dsi.ut-capitole.fr/blacklists/download/vpn.tar.gz"
+    adapter: "tar_gz_parser"
+    active: true
+
+  - id: "oisd_extra_vpn"
+    category: "vpn_proxy"
+    name: "OISD Anti-Bypass"
+    url: "https://raw.githubusercontent.com/oisd-network/lists/master/vpn.txt"
+    adapter: "plain_text_parser"
+    active: true
