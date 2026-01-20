@@ -29,7 +29,7 @@
     <div class="card">
         <h3>Quellen-Status (Ampeln)</h3>
         <div id="source-status-list" class="status-container">
-            <p>Lade Status-Informationen...</p>
+            <p id="status-loading">Lade Status-Informationen...</p>
         </div>
     </div>
 
@@ -41,8 +41,12 @@
     </div>
 
     <div class="card">
-        <h3>2. Whitelist (Ausnahmen)</h3>
-        <textarea id="whitelist-input" placeholder="z.B. wikipedia.org (eine Domain pro Zeile)"></textarea>
+        <h3>2. Daten-Limiter & Whitelist</h3>
+        <p>Anzahl der Domains (Top-Ranking): <strong id="limit-value">10000</strong></p>
+        <input type="range" id="limit-slider" min="1000" max="150000" step="1000" value="10000" style="width:100%;">
+        
+        <p style="margin-top:20px;">Whitelist (Ausnahmen - eine pro Zeile):</p>
+        <textarea id="whitelist-input" placeholder="z.B. wikipedia.org"></textarea>
     </div>
 
     <div class="card">
@@ -55,17 +59,20 @@
             <option value="pihole">Pi-hole (Reine Liste)</option>
             <option value="dnsmasq">Dnsmasq (address=/.../)</option>
             <option value="unbound">Unbound (local-zone)</option>
+            <option value="rpz">BIND RPZ (CNAME .)</option>
+            <option value="json">JSON Datenformat</option>
+            <option value="csv">Excel / CSV Format</option>
         </select>
         
         <div class="direct-link-box">
-            <strong>Direkt-Link fuer den Router:</strong>
+            <strong>Direkt-Link fuer den Router:</strong><br>
             <code id="direct-link-display">Waehle ein System...</code>
         </div>
     </div>
 
     <div class="card">
         <h3>Vorschau (Preview)</h3>
-        <pre id="preview-area" class="preview-box">Waehle Optionen aus, um eine Vorschau zu sehen...</pre>
+        <pre id="preview-area" class="preview-box">Warte auf Daten...</pre>
     </div>
 
     <button class="btn" id="generate-btn">Konfiguration als Datei herunterladen</button>
