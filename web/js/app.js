@@ -1,6 +1,8 @@
-// app.js - X-iNet Filter Engine (Full Version)
+// app.js - X-iNet Filter Engine (Final Pro Version)
 let rawData = [];
-const BASE_RAW_URL = "https://raw.githubusercontent.com/albertuszerk/inetfilterlist/main/output/";
+// Wir nutzen einen relativen Pfad, der sowohl lokal als auch auf GitHub Pages funktioniert
+const BASE_PATH = "../../output/";
+const RAW_GITHUB_URL = "https://raw.githubusercontent.com/albertuszerk/inetfilterlist/main/output/";
 
 const FORMAT_FILES = {
     flint2: "xinet_flint2_adguard.txt",
@@ -16,10 +18,8 @@ const FORMAT_FILES = {
 };
 
 async function init() {
-    // Whitelist laden
     document.getElementById('whitelist-input').value = localStorage.getItem('xinet_whitelist') || '';
     
-    // Event-Listener
     document.getElementById('limit-slider').addEventListener('input', (e) => {
         document.getElementById('limit-value').innerText = e.target.value;
         updateUI();
@@ -34,18 +34,18 @@ async function init() {
 
 async function loadStatus() {
     try {
-        // Pfad fuer GitHub Pages: ../../output/status.json
-        const r = await fetch('../../output/status.json');
+        const r = await fetch(BASE_PATH + 'status.json');
+        if (!r.ok) throw new Error("Status nicht gefunden");
         const d = await r.json();
         
-        document.getElementById('brutto-count').innerText = d.metadata.brutto.toLocaleString('de-DE');
-        document.getElementById('netto-count').innerText = d.metadata.netto.toLocaleString('de-DE');
+        document.getElementById('brutto-count').innerText = (d.metadata.brutto || 0).toLocaleString('de-DE');
+        document.getElementById('netto-count').innerText = (d.metadata.netto || 0).toLocaleString('de-DE');
         
         const catContainer = document.getElementById('dynamic-categories');
         const statusList = document.getElementById('source-status-list');
-        catContainer.innerHTML = ''; statusList.innerHTML = '';
+        catContainer.innerHTML = ''; 
+        statusList.innerHTML = '';
 
-        // Dynamische Kategorien aus Status-Daten
         const uniqueCats = [...new Set(d.sources.map(s => s.category))];
         uniqueCats.forEach(cat => {
             catContainer.innerHTML += `<label><input type="checkbox" class="cat-cb" value="${cat}" checked onchange="updateUI()"> ${cat.toUpperCase()}</label>`;
@@ -56,13 +56,14 @@ async function loadStatus() {
         });
     } catch(e) { 
         console.error("Status-Ladefehler", e);
-        document.getElementById('status-loading').innerText = "Fehler: status.json nicht gefunden.";
+        document.getElementById('source-status-list').innerHTML = '<p style="color:red;">Fehler: status.json konnte nicht geladen werden.</p>';
     }
 }
 
 async function loadData() {
     try {
-        const r = await fetch('../../output/xinet_data.json');
+        const r = await fetch(BASE_PATH + 'xinet_data.json');
+        if (!r.ok) throw new Error("Daten nicht gefunden");
         rawData = await r.json();
         updateUI();
     } catch(e) { 
@@ -80,15 +81,12 @@ function updateUI() {
     localStorage.setItem('xinet_whitelist', whitelistText);
     const whitelist = whitelistText.split('\n').map(s => s.trim().toLowerCase()).filter(s => s !== "");
 
-    // Filterung & Limiter
     const filtered = rawData.filter(item => activeCats.includes(item.c) && !whitelist.includes(item.d)).slice(0, limit);
     document.getElementById('live-counter').innerText = filtered.length.toLocaleString('de-DE');
 
-    // Direkt-Link
     const format = document.getElementById('format-select').value;
-    document.getElementById('direct-link-display').innerText = BASE_RAW_URL + FORMAT_FILES[format];
+    document.getElementById('direct-link-display').innerText = RAW_GITHUB_URL + FORMAT_FILES[format];
 
-    // Vorschau
     renderPreview(filtered, format);
 }
 
@@ -108,24 +106,21 @@ function renderPreview(data, format) {
 }
 
 function downloadFile() {
-    const limit = parseInt(document.getElementById('limit-slider').value);
+    const format = document.getElementById('format-select').value;
     const activeCats = Array.from(document.querySelectorAll('.cat-cb:checked')).map(cb => cb.value);
     const whitelist = document.getElementById('whitelist-input').value.split('\n').map(s => s.trim().toLowerCase()).filter(s => s !== "");
-    const format = document.getElementById('format-select').value;
+    const limit = parseInt(document.getElementById('limit-slider').value);
 
     const data = rawData.filter(item => activeCats.includes(item.c) && !whitelist.includes(item.d)).slice(0, limit);
     
     let content = "";
     if (format === 'mikrotik') content = "/ip dns static\n";
-    else if (format === 'flint2') content = "! X-iNet Filter\n";
-
     data.forEach(i => {
         if (format === 'flint2') content += `||${i.d}^\n`;
         else if (format === 'mikrotik') content += `add address=127.0.0.1 name="${i.d}"\n`;
         else if (format === 'hosts') content += `0.0.0.0 ${i.d}\n`;
         else if (format === 'dnsmasq') content += `address=/${i.d}/\n`;
         else if (format === 'unbound') content += `local-zone: "${i.d}" always_nxdomain\n`;
-        else if (format === 'rpz') content += `${i.d} CNAME .\n`;
         else content += `${i.d}\n`;
     });
 
