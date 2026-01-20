@@ -3,10 +3,10 @@ let rawData = [];
 const BASE_RAW_URL = "https://raw.githubusercontent.com/albertuszerk/inetfilterlist/main/output/";
 
 const FORMAT_FILES = {
+    hosts: "xinet_universal_hosts.txt",
     flint2: "xinet_flint2_adguard.txt",
     mikrotik: "xinet_mikrotik.rsc",
     fritzbox: "xinet_fritzbox.txt",
-    hosts: "xinet_universal_hosts.txt",
     pihole: "xinet_pihole.txt",
     dnsmasq: "xinet_dnsmasq.conf",
     unbound: "xinet_unbound.conf"
@@ -29,43 +29,45 @@ async function init() {
 
 async function loadStatus() {
     try {
-        const r = await fetch('../output/status.json');
-        if (!r.ok) throw new Error("Status nicht gefunden");
-        const d = await r.json();
+        const response = await fetch('../output/status.json');
+        const data = await response.json();
         
-        // Stats befuellen (beachtet beide moeglichen Key-Varianten)
-        document.getElementById('brutto-count').innerText = (d.metadata.total_processed_brutto || d.metadata.brutto || 0).toLocaleString('de-DE');
-        document.getElementById('netto-count').innerText = (d.metadata.total_unique_netto || d.metadata.netto || 0).toLocaleString('de-DE');
+        // Stats befuellen (beachtet beide moegliche Key-Varianten)
+        const brutto = data.metadata.total_processed_brutto || data.metadata.brutto || 0;
+        const netto = data.metadata.total_unique_netto || data.metadata.netto || 0;
+        
+        document.getElementById('brutto-count').innerText = brutto.toLocaleString('de-DE');
+        document.getElementById('netto-count').innerText = netto.toLocaleString('de-DE');
         
         const catContainer = document.getElementById('dynamic-categories');
         const statusList = document.getElementById('source-status-list');
         catContainer.innerHTML = ''; 
         statusList.innerHTML = '';
 
-        const uniqueCats = [...new Set(d.sources.map(s => s.category.toUpperCase()))];
+        // Kategorien extrahieren und vereinheitlichen
+        const uniqueCats = [...new Set(data.sources.map(s => s.category.toLowerCase()))];
         uniqueCats.forEach(cat => {
-            catContainer.innerHTML += `<label style="display:block; margin: 5px 0; cursor:pointer;">
-                <input type="checkbox" class="cat-cb" value="${cat}" checked onchange="updateUI()"> ${cat}
-            </label>`;
+            const label = cat.toUpperCase();
+            catContainer.innerHTML += `
+                <label style="display:block; margin: 5px 0; cursor:pointer;">
+                    <input type="checkbox" class="cat-cb" value="${cat}" checked onchange="updateUI()"> ${label}
+                </label>`;
         });
 
-        d.sources.forEach(s => {
+        data.sources.forEach(s => {
             statusList.innerHTML += `<div><span class="status-indicator status-${s.status}"></span> ${s.name}: ${s.count.toLocaleString('de-DE')}</div>`;
         });
-    } catch(e) { 
-        console.error("Status-Ladefehler", e);
-    }
+    } catch(e) { console.error("Status-Fehler", e); }
 }
 
 async function loadData() {
     try {
-        const r = await fetch('../output/xinet_data.json');
-        if (!r.ok) throw new Error("Daten nicht gefunden");
-        rawData = await r.json();
+        const response = await fetch('../output/xinet_data.json');
+        rawData = await response.json();
         updateUI();
     } catch(e) { 
-        console.error("Daten-Ladefehler", e);
-        document.getElementById('preview-area').innerText = "Warte auf Synchronisation der xinet_data.json...";
+        console.error("Daten-Fehler", e);
+        document.getElementById('preview-area').innerText = "Warte auf Synchronisation der xinet_data.json (Datei noch 'Untracked')...";
     }
 }
 
@@ -73,16 +75,15 @@ function updateUI() {
     if (rawData.length === 0) return;
 
     const limit = parseInt(document.getElementById('limit-slider').value);
-    // Wir holen die ausgewaehlten Kategorien in GROSSBUCHSTABEN
-    const activeCats = Array.from(document.querySelectorAll('.cat-cb:checked')).map(cb => cb.value.toUpperCase());
+    const activeCats = Array.from(document.querySelectorAll('.cat-cb:checked')).map(cb => cb.value.toLowerCase());
     
     const whitelistText = document.getElementById('whitelist-input').value;
     localStorage.setItem('xinet_whitelist', whitelistText);
     const whitelist = whitelistText.split('\n').map(s => s.trim().toLowerCase()).filter(s => s !== "");
 
-    // Filterung: Beachtet Gross-/Kleinschreibung beim Vergleich
+    // Filterung: Erzwingt Kleinschreibung beim Vergleich
     const filtered = rawData.filter(item => 
-        activeCats.includes(item.c.toUpperCase()) && !whitelist.includes(item.d.toLowerCase())
+        activeCats.includes(item.c.toLowerCase()) && !whitelist.includes(item.d.toLowerCase())
     ).slice(0, limit);
     
     document.getElementById('live-counter').innerText = filtered.length.toLocaleString('de-DE');
@@ -97,7 +98,7 @@ function renderPreview(data, format) {
     const max = 15;
     let text = `--- Vorschau (${format.toUpperCase()}) ---\n`;
     if (data.length === 0) {
-        text += "(Keine Domains fuer diese Auswahl gefunden - pruefe die Checkboxen)";
+        text += "(Keine Domains fuer diese Auswahl gefunden - Bitte pruefen Sie die Checkboxen)";
     } else {
         data.slice(0, max).forEach(i => {
             if (format === 'flint2') text += `||${i.d}^\n`;
@@ -114,12 +115,12 @@ function renderPreview(data, format) {
 
 function downloadFile() {
     const format = document.getElementById('format-select').value;
-    const activeCats = Array.from(document.querySelectorAll('.cat-cb:checked')).map(cb => cb.value.toUpperCase());
+    const activeCats = Array.from(document.querySelectorAll('.cat-cb:checked')).map(cb => cb.value.toLowerCase());
     const whitelist = document.getElementById('whitelist-input').value.split('\n').map(s => s.trim().toLowerCase()).filter(s => s !== "");
     const limit = parseInt(document.getElementById('limit-slider').value);
 
     const data = rawData.filter(item => 
-        activeCats.includes(item.c.toUpperCase()) && !whitelist.includes(item.d.toLowerCase())
+        activeCats.includes(item.c.toLowerCase()) && !whitelist.includes(item.d.toLowerCase())
     ).slice(0, limit);
     
     let content = "";
