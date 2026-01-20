@@ -1,71 +1,65 @@
-// app.js - Die intelligente Steuerzentrale
+// app.js - Die interaktive Filter-Engine
 
-let globalDomainData = []; // Hier speichern wir die Rohdaten nach dem Laden
+let rawData = []; // Die Basis-Daten mit Kategorien
 
-async function initApp() {
+async function init() {
     await loadStatus();
-    await loadRawData();
+    await loadData();
+    // Whitelist aus dem Speicher laden
+    document.getElementById('whitelist-input').value = localStorage.getItem('xinet_whitelist') || '';
 }
 
-// 1. Status und Ampeln laden
 async function loadStatus() {
     try {
-        const response = await fetch('../output/status.json');
-        const data = await response.json();
-
-        document.getElementById('brutto-count').innerText = data.metadata.total_processed_brutto.toLocaleString('de-DE');
-        document.getElementById('netto-count').innerText = data.metadata.total_unique_netto.toLocaleString('de-DE');
-        document.getElementById('last-update').innerText = data.metadata.timestamp;
-
-        const statusList = document.getElementById('source-status-list');
-        statusList.innerHTML = '';
-        data.sources.forEach(source => {
-            const div = document.createElement('div');
-            div.style.padding = "5px 0";
-            div.innerHTML = `<span class="status-indicator status-${source.status}"></span> 
-                             <strong>${source.name}</strong>: ${source.count.toLocaleString('de-DE')} Eintraege`;
-            statusList.appendChild(div);
+        const r = await fetch('../../output/status.json');
+        const d = await r.json();
+        document.getElementById('brutto-count').innerText = d.metadata.brutto.toLocaleString('de-DE');
+        document.getElementById('netto-count').innerText = d.metadata.netto.toLocaleString('de-DE');
+        document.getElementById('last-update').innerText = d.metadata.timestamp;
+        
+        const list = document.getElementById('source-status-list');
+        list.innerHTML = '';
+        d.sources.forEach(s => {
+            list.innerHTML += `<div style="margin-bottom:5px;"><span class="status-indicator status-${s.status}"></span> ${s.name}: ${s.count.toLocaleString('de-DE')}</div>`;
         });
-    } catch (e) { console.error("Status-Fehler", e); }
+    } catch(e) { console.error("Status konnte nicht geladen werden."); }
 }
 
-// 2. Die Rohdaten fuer die Filter-Engine laden
-async function loadRawData() {
+async function loadData() {
     try {
-        const response = await fetch('../output/xinet_data.json');
-        globalDomainData = await response.json();
-        console.log("Daten-Engine bereit. " + globalDomainData.length + " Domains geladen.");
-    } catch (e) { console.error("Daten-Fehler", e); }
+        const r = await fetch('../../output/xinet_data.json');
+        rawData = await r.json();
+        console.log("Engine geladen: " + rawData.length + " Domains.");
+    } catch(e) { console.error("Daten-Engine Fehler."); }
 }
 
-// 3. Die eigentliche "Innovations-Maschine": Datei generieren
-function generateFilterFile() {
-    const whitelist = document.getElementById('whitelist-input').value
-                        .split('\n')
-                        .map(d => d.trim().toLowerCase())
-                        .filter(d => d.length > 0);
+function generate() {
+    const activeCats = [];
+    if(document.getElementById('cat-sex').checked) activeCats.push('sex');
+    if(document.getElementById('cat-violence').checked) activeCats.push('violence');
+    if(document.getElementById('cat-vpn').checked) activeCats.push('vpn_proxy');
+    if(document.getElementById('cat-gambling').checked) activeCats.push('gambling');
 
-    // In diesem Prototyp filtern wir einfach gegen die Whitelist
-    // Spaeter koennen wir hier noch die Kategorien-Logik verfeinern
-    let filteredList = globalDomainData.filter(domain => !whitelist.includes(domain));
+    const whitelist = document.getElementById('whitelist-input').value.split('\n').map(s => s.trim().toLowerCase()).filter(s => s !== "");
+    localStorage.setItem('xinet_whitelist', document.getElementById('whitelist-input').value);
 
-    // Format waehlen (Wir nutzen hier als Beispiel das Flint 2 / AdGuard Format)
-    let outputContent = "! Title: Individueller X-iNet Filter\n! Erstellt am: " + new Date().toLocaleString() + "\n";
-    filteredList.forEach(domain => {
-        outputContent += `||${domain}^\n`;
+    // Filter-Prozess
+    const filtered = rawData.filter(item => activeCats.includes(item.c) && !whitelist.includes(item.d));
+
+    // Format-Wahl (Beispiel Flint 2)
+    let content = "! X-iNet Individueller Filter\n! Erstellt: " + new Date().toLocaleString() + "\n";
+    filtered.forEach(item => {
+        content += `||${item.d}^\n`;
     });
 
-    // Download ausloesen
-    const blob = new Blob([outputContent], { type: 'text/plain' });
+    // Download
+    const blob = new Blob([content], {type: 'text/plain'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = 'mein_xinet_filter.txt';
-    document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
 }
 
-document.getElementById('generate-btn').addEventListener('click', generateFilterFile);
-window.addEventListener('DOMContentLoaded', initApp);
+document.getElementById('generate-btn').addEventListener('click', generate);
+window.addEventListener('DOMContentLoaded', init);
