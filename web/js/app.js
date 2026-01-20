@@ -1,4 +1,4 @@
-// app.js - X-iNet Filter Engine (Optimierte Version)
+// app.js - X-iNet Filter Engine (Finale Korrektur)
 let rawData = [];
 const RAW_GITHUB_BASE = "https://raw.githubusercontent.com/albertuszerk/inetfilterlist/main/output/";
 
@@ -18,7 +18,6 @@ const FORMAT_FILES = {
 async function init() {
     document.getElementById('whitelist-input').value = localStorage.getItem('xinet_whitelist') || '';
     
-    // Event-Listener fuer Slider und Auswahl
     document.getElementById('limit-slider').addEventListener('input', (e) => {
         document.getElementById('limit-value').innerText = e.target.value;
         updateUI();
@@ -33,7 +32,7 @@ async function init() {
 
 async function loadStatus() {
     try {
-        // Relativer Pfad von web/index.html zu output/status.json ist ../output/
+        // Pfad fuer GitHub Pages und Lokal: Eine Ebene zurueck
         const response = await fetch('../output/status.json');
         if (!response.ok) throw new Error("Status-Datei nicht gefunden");
         const data = await response.json();
@@ -59,7 +58,7 @@ async function loadStatus() {
         });
     } catch(e) { 
         console.error("Status-Fehler:", e);
-        document.getElementById('source-status-list').innerHTML = `<p style="color:red;">Fehler beim Laden der status.json.</p>`;
+        document.getElementById('source-status-list').innerHTML = `<p style="color:red;">Status-Daten konnten nicht geladen werden. Bitte prüfen Sie, ob die Datei im Repository existiert.</p>`;
     }
 }
 
