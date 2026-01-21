@@ -1,45 +1,55 @@
+import json
+import os
+from datetime import datetime
+from core.normalizer import normalize_domain
+
 class MasterTable:
     def __init__(self):
-        # Struktur: { "domain.com": {"categories": set(), "rank": 9999999} }
         self.data = {}
-        self.default_rank = 1000000  # Alles, was nicht in den Top-Listen ist
+        self.default_rank = 1000000
+
+    def load_ranking_list(self, filepath):
+        if not os.path.exists(filepath):
+            print(f"⚠️ Keine Ranking-Datei zum Einlesen gefunden.")
+            return
+
+        print(f"Initialisiere Ranking-Logik...")
+        count = 0
+        with open(filepath, "r") as f:
+            for i, line in enumerate(f, 1):
+                parts = line.strip().split(",")
+                domain = parts[-1] 
+                normalized = normalize_domain(domain)
+                if normalized:
+                    if normalized not in self.data:
+                        self.data[normalized] = {"categories": set(), "rank": i}
+                    else:
+                        self.data[normalized]["rank"] = i
+                    count += 1
+        print(f"✅ {count} Domains wurden erfolgreich priorisiert.")
 
     def add_domain(self, domain, category, rank=None):
-        """Fügt eine Domain hinzu oder aktualisiert Kategorien/Rank."""
         if domain not in self.data:
             self.data[domain] = {
                 "categories": {category},
                 "rank": rank if rank is not None else self.default_rank
             }
         else:
-            # Kategorie hinzufügen (Deduplizierung passiert durch das Set automatisch)
             self.data[domain]["categories"].add(category)
-            # Wenn ein besserer (niedrigerer) Rank gefunden wird, aktualisieren
             if rank is not None and rank < self.data[domain]["rank"]:
                 self.data[domain]["rank"] = rank
 
-    def apply_whitelist(self, whitelist_set):
-        """Entfernt alle Domains, die auf der Whitelist stehen."""
-        for domain in whitelist_set:
-            if domain in self.data:
-                del self.data[domain]
-
-    def get_filtered_list(self, target_categories, limit=None):
-        """
-        Extrahiert die Liste basierend auf User-Wunsch.
-        Sortiert nach Rank (niedrigster zuerst = wichtigste Seiten).
-        """
-        result = []
-        for domain, info in self.data.items():
-            # Prüfen, ob die Domain in einer der gewünschten Kategorien ist
-            if any(cat in target_categories for cat in info["categories"]):
-                result.append((domain, info["rank"]))
-
-        # Sortieren nach Rank
-        result.sort(key=lambda x: x[1])
-
-        # Limiter anwenden (unser Export-Limiter aus der GUI)
-        if limit:
-            result = result[:limit]
+    def generate_status_json(self, output_dir):
+        stats = {
+            "total_domains": len(self.data),
+            "categories": {},
+            "last_update": datetime.now().isoformat()
+        }
+        for info in self.data.values():
+            for cat in info["categories"]:
+                stats["categories"][cat] = stats["categories"].get(cat, 0) + 1
         
-        return [item[0] for item in result]
+        file_path = os.path.join(output_dir, "status.json")
+        with open(file_path, "w") as f:
+            json.dump(stats, f, indent=4)
+        print(f"✅ Statusbericht unter {file_path} gespeichert.")

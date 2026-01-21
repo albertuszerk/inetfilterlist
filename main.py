@@ -1,7 +1,6 @@
 import sys
 import os
 
-# Pfad-Initialisierung
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
 
@@ -17,11 +16,19 @@ def run_pipeline():
     print("--- X-iNet Multi-Format Generation inkl. Social ---")
     
     master = MasterTable()
-    # load_ranking() wurde entfernt, da die Funktion in MasterTable fehlt
-    
     handler = SourceHandler()
-
-    # Die vervollstaendigte Quellenliste inkl. Social
+    
+    data_dir = os.path.join(BASE_DIR, "data")
+    if not os.path.exists(data_dir): os.makedirs(data_dir)
+    
+    ranking_file = os.path.join(data_dir, "top_ranking.csv")
+    
+    # Pruefen und ggf. mit Fallback herunterladen
+    if not os.path.exists(ranking_file):
+        handler.download_ranking(ranking_file)
+    
+    master.load_ranking_list(ranking_file)
+    
     sources = [
         {"name": "UT1 Violence", "url": "https://dsi.ut-capitole.fr/blacklists/download/violence.tar.gz", "cat": "violence"},
         {"name": "UT1 Porn", "url": "https://dsi.ut-capitole.fr/blacklists/download/porn.tar.gz", "cat": "sex"},
@@ -37,17 +44,15 @@ def run_pipeline():
         try:
             domains = handler.fetch(s['url'])
             for d in domains:
-                # Wir schreiben die Domain mit ihrer Kategorie in die Master-Tabelle
                 master.add_domain(d, s['cat'])
         except Exception as e:
             print(f"⚠️ Fehler bei {s['name']}: {e}")
 
-    out = "output"
+    out = os.path.join(BASE_DIR, "output")
     if not os.path.exists(out): os.makedirs(out)
 
     print("Erzeuge Web-Export (JSON)...")
     exporter = DataExporter(out)
-    # Hier werden die 150.000 wichtigsten Domains fuer die Webseite gespeichert
     exporter.export_web_json(master.data, "xinet_data.json", limit=150000)
 
     print("Erzeuge Status-Bericht...")

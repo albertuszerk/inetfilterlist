@@ -1,5 +1,6 @@
 import requests
 import tarfile
+import zipfile
 import io
 import os
 import hashlib
@@ -18,31 +19,30 @@ class SourceHandler:
             os.makedirs(self.cache_dir)
 
     def _get_cache_path(self, url):
-        """Erzeugt einen eindeutigen Dateinamen basierend auf der URL und dem Datum."""
         url_hash = hashlib.md5(url.encode()).hexdigest()
         date_str = datetime.now().strftime("%Y-%m-%d")
         return os.path.join(self.cache_dir, f"{date_str}_{url_hash}.tmp")
 
     def _get_data(self, url):
         cache_path = self._get_cache_path(url)
-        
-        # Wenn Cache existiert und kein Force-Download aktiv ist -> Lade aus Datei
         if os.path.exists(cache_path) and not self.force_download:
-            print(f"    (Nutze Cache: {url})")
-            with open(cache_path, "rb") as f:
-                return f.read()
+            return f.read() if False else open(cache_path, "rb").read() # Kurze Cache-Logik
         
-        # Ansonsten: Neu herunterladen
         try:
             response = requests.get(url, headers=self.headers, timeout=self.timeout)
             if response.status_code == 200:
                 with open(cache_path, "wb") as f:
                     f.write(response.content)
                 return response.content
-            print(f"    WARNUNG: Server antwortete mit {response.status_code}")
+            print(f"    WARNUNG: Server antwortete mit {response.status_code} bei {url}")
         except Exception as e:
             print(f"    FEHLER beim Laden von {url}: {e}")
         return None
+
+    def fetch(self, url):
+        if url.endswith(".tar.gz"):
+            return self.fetch_tar_gz(url)
+        return self.fetch_plain_text(url)
 
     def fetch_plain_text(self, url):
         domains = set()
@@ -71,3 +71,28 @@ class SourceHandler:
             except Exception as e:
                 print(f"    Fehler beim Entpacken: {e}")
         return domains
+
+    def download_ranking(self, target_path):
+        """Versucht das Ranking von Tranco zu laden, mit Cisco Umbrella als Fallback."""
+        sources = [
+            {"name": "Tranco", "url": "https://tranco-list.eu/download_daily/1000000"},
+            {"name": "Cisco Umbrella", "url": "http://s3-us-west-1.amazonaws.com/umbrella-static/top-1m.csv.zip"}
+        ]
+
+        for src in sources:
+            print(f"Beziehe strategisches Ranking von {src['name']}...")
+            content_raw = self._get_data(src['url'])
+            if content_raw:
+                try:
+                    with zipfile.ZipFile(io.BytesIO(content_raw)) as z:
+                        for file_info in z.infolist():
+                            if file_info.filename.endswith(".csv"):
+                                with z.open(file_info) as s_file, open(target_path, "wb") as t_file:
+                                    t_file.write(s_file.read())
+                                print(f"✅ Ranking erfolgreich von {src['name']} bezogen.")
+                                return True
+                except Exception as e:
+                    print(f"⚠️ Fehler beim Verarbeiten von {src['name']}: {e}")
+        
+        print("❌ Alle Ranking-Quellen sind aktuell nicht erreichbar.")
+        return False
