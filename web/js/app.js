@@ -1,4 +1,4 @@
-// app.js - X-iNet Filter Engine (Final Robust Version)
+// app.js - X-iNet Universal Engine (Robuste Version)
 let rawData = [];
 const BASE_RAW_URL = "https://raw.githubusercontent.com/albertuszerk/inetfilterlist/main/output/";
 
@@ -18,6 +18,7 @@ const FORMAT_FILES = {
 async function init() {
     document.getElementById('whitelist-input').value = localStorage.getItem('xinet_whitelist') || '';
     
+    // Event-Listener
     document.getElementById('limit-slider').addEventListener('input', (e) => {
         document.getElementById('limit-value').innerText = e.target.value;
         updateUI();
@@ -32,40 +33,44 @@ async function init() {
 
 async function loadStatus() {
     try {
-        // Cache-Buster verhindert das Laden alter Versionen
-        const r = await fetch('../output/status.json?v=' + Date.now());
-        const d = await r.json();
+        const response = await fetch('../output/status.json?v=' + Date.now());
+        const data = await response.json();
         
-        document.getElementById('brutto-count').innerText = (d.metadata.total_processed_brutto || d.metadata.brutto || 0).toLocaleString('de-DE');
-        document.getElementById('netto-count').innerText = (d.metadata.total_unique_netto || d.metadata.netto || 0).toLocaleString('de-DE');
+        // Erkennt brutto/netto oder total_processed...
+        const b = data.metadata.brutto || data.metadata.total_processed_brutto || 0;
+        const n = data.metadata.netto || data.metadata.total_unique_netto || 0;
+        
+        document.getElementById('brutto-count').innerText = b.toLocaleString('de-DE');
+        document.getElementById('netto-count').innerText = n.toLocaleString('de-DE');
         
         const catContainer = document.getElementById('dynamic-categories');
         const statusList = document.getElementById('source-status-list');
         catContainer.innerHTML = ''; 
         statusList.innerHTML = '';
 
-        const uniqueCats = [...new Set(d.sources.map(s => s.category.toLowerCase()))];
+        const uniqueCats = [...new Set(data.sources.map(s => s.category.toLowerCase()))];
         uniqueCats.forEach(cat => {
-            catContainer.innerHTML += `<label style="display:block; margin: 5px 0; cursor:pointer;">
-                <input type="checkbox" class="cat-cb" value="${cat}" checked onchange="updateUI()"> ${cat.toUpperCase()}
-            </label>`;
+            catContainer.innerHTML += `
+                <label style="display:block; margin: 5px 0; cursor:pointer;">
+                    <input type="checkbox" class="cat-cb" value="${cat}" checked onchange="updateUI()"> ${cat.toUpperCase()}
+                </label>`;
         });
 
-        d.sources.forEach(s => {
+        data.sources.forEach(s => {
             statusList.innerHTML += `<div><span class="status-indicator status-${s.status}"></span> ${s.name}: ${s.count.toLocaleString('de-DE')}</div>`;
         });
-    } catch(e) { console.error("Status-Ladefehler", e); }
+    } catch(e) { console.error("Status-Fehler", e); }
 }
 
 async function loadData() {
     try {
-        // Cache-Buster fuer die grosse Datendatei
-        const r = await fetch('../output/xinet_data.json?v=' + Date.now());
-        rawData = await r.json();
+        const response = await fetch('../output/xinet_data.json?v=' + Date.now());
+        rawData = await response.json();
+        console.log("Daten geladen. Erster Eintrag:", rawData[0]); // Debug-Info fuer die Konsole
         updateUI();
     } catch(e) { 
-        console.error("Daten-Ladefehler", e);
-        document.getElementById('preview-area').innerText = "Fehler: xinet_data.json konnte nicht geladen werden.";
+        console.error("Daten-Fehler", e);
+        document.getElementById('preview-area').innerText = "Fehler beim Laden der xinet_data.json.";
     }
 }
 
@@ -74,16 +79,14 @@ function updateUI() {
 
     const limit = parseInt(document.getElementById('limit-slider').value);
     const activeCats = Array.from(document.querySelectorAll('.cat-cb:checked')).map(cb => cb.value.toLowerCase());
-    
-    const whitelistText = document.getElementById('whitelist-input').value;
-    localStorage.setItem('xinet_whitelist', whitelistText);
-    const whitelist = whitelistText.split('\n').map(s => s.trim().toLowerCase()).filter(s => s !== "");
+    const whitelist = document.getElementById('whitelist-input').value.split('\n').map(s => s.trim().toLowerCase()).filter(s => s !== "");
+    localStorage.setItem('xinet_whitelist', document.getElementById('whitelist-input').value);
 
-    // Filterung: Beachtet Gross-/Kleinschreibung beim Abgleich
+    // Flexible Filter-Logik: Erkennt 'c' oder 'category' / 'd' oder 'domain'
     const filtered = rawData.filter(item => {
-        const itemCat = (item.c || "").toLowerCase();
-        const itemDom = (item.d || "").toLowerCase();
-        return activeCats.includes(itemCat) && !whitelist.includes(itemDom);
+        const category = (item.c || item.category || "").toLowerCase();
+        const domain = (item.d || item.domain || "").toLowerCase();
+        return activeCats.includes(category) && !whitelist.includes(domain);
     }).slice(0, limit);
     
     document.getElementById('live-counter').innerText = filtered.length.toLocaleString('de-DE');
@@ -98,15 +101,16 @@ function renderPreview(data, format) {
     const max = 15;
     let text = `--- Vorschau (${format.toUpperCase()}) ---\n`;
     if (data.length === 0) {
-        text += "(Keine Domains fuer diese Auswahl gefunden - Bitte Checkboxen pruefen)";
+        text += "(Keine Treffer gefunden. Bitte prüfen Sie die Kategorien-Auswahl.)";
     } else {
         data.slice(0, max).forEach(i => {
-            if (format === 'flint2') text += `||${i.d}^\n`;
-            else if (format === 'mikrotik') text += `add address=127.0.0.1 name="${i.d}"\n`;
-            else if (format === 'hosts') text += `0.0.0.0 ${i.d}\n`;
-            else if (format === 'dnsmasq') text += `address=/${i.d}/\n`;
-            else if (format === 'unbound') text += `local-zone: "${i.d}" always_nxdomain\n`;
-            else text += `${i.d}\n`;
+            const d = i.d || i.domain;
+            if (format === 'flint2') text += `||${d}^\n`;
+            else if (format === 'mikrotik') text += `add address=127.0.0.1 name="${d}"\n`;
+            else if (format === 'hosts') text += `0.0.0.0 ${d}\n`;
+            else if (format === 'dnsmasq') text += `address=/${d}/\n`;
+            else if (format === 'unbound') text += `local-zone: "${d}" always_nxdomain\n`;
+            else text += `${d}\n`;
         });
         if (data.length > max) text += "...";
     }
@@ -114,16 +118,15 @@ function renderPreview(data, format) {
 }
 
 function downloadFile() {
-    if (!rawData || rawData.length === 0) return;
     const format = document.getElementById('format-select').value;
     const activeCats = Array.from(document.querySelectorAll('.cat-cb:checked')).map(cb => cb.value.toLowerCase());
     const whitelist = document.getElementById('whitelist-input').value.split('\n').map(s => s.trim().toLowerCase()).filter(s => s !== "");
     const limit = parseInt(document.getElementById('limit-slider').value);
 
     const data = rawData.filter(item => {
-        const itemCat = (item.c || "").toLowerCase();
-        const itemDom = (item.d || "").toLowerCase();
-        return activeCats.includes(itemCat) && !whitelist.includes(itemDom);
+        const category = (item.c || item.category || "").toLowerCase();
+        const domain = (item.d || item.domain || "").toLowerCase();
+        return activeCats.includes(category) && !whitelist.includes(domain);
     }).slice(0, limit);
     
     let content = "";
@@ -131,13 +134,14 @@ function downloadFile() {
     else if (format === 'flint2') content = "! X-iNet Filter\n";
 
     data.forEach(i => {
-        if (format === 'flint2') content += `||${i.d}^\n`;
-        else if (format === 'mikrotik') content += `add address=127.0.0.1 name="${i.d}"\n`;
-        else if (format === 'hosts') content += `0.0.0.0 ${i.d}\n`;
-        else if (format === 'dnsmasq') content += `address=/${i.d}/\n`;
-        else if (format === 'unbound') content += `local-zone: "${i.d}" always_nxdomain\n`;
-        else if (format === 'rpz') content += `${i.d} CNAME .\n`;
-        else content += `${i.d}\n`;
+        const d = i.d || i.domain;
+        if (format === 'flint2') content += `||${d}^\n`;
+        else if (format === 'mikrotik') content += `add address=127.0.0.1 name="${d}"\n`;
+        else if (format === 'hosts') content += `0.0.0.0 ${d}\n`;
+        else if (format === 'dnsmasq') content += `address=/${d}/\n`;
+        else if (format === 'unbound') content += `local-zone: "${d}" always_nxdomain\n`;
+        else if (format === 'rpz') content += `${d} CNAME .\n`;
+        else content += `${d}\n`;
     });
 
     const blob = new Blob([content], {type: 'text/plain'});
