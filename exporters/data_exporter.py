@@ -1,19 +1,14 @@
 import os
 import json
-import csv
 
 class DataExporter:
     def __init__(self, output_dir="output"):
         self.output_dir = output_dir
 
-    def export_web_json(self, master_data, filename="xinet_data.json", limit=100000):
-        """
-        Erstellt eine JSON-Datei, die Domains UND Kategorien enthaelt.
-        Format: [{"d": "domain.com", "c": "sex"}, ...]
-        """
+    def export_web_json(self, master_data, filename="xinet_data.json", limit=150000):
         path = os.path.join(self.output_dir, filename)
         
-        # Wir sortieren nach Ranking und nehmen die Top-Eintraege
+        # Wir sortieren nach Ranking
         sorted_domains = sorted(
             master_data.items(),
             key=lambda x: x[1]['rank'] if x[1]['rank'] is not None else 9999999
@@ -21,20 +16,13 @@ class DataExporter:
         
         web_data = []
         for domain, info in sorted_domains:
+            # WICHTIG: Hier wird das Objekt mit Domain (d) und Kategorie (c) gebaut
             web_data.append({
                 "d": domain,
                 "c": info['category']
             })
             
         with open(path, "w", encoding="utf-8") as f:
-            json.dump(web_data, f, separators=(',', ':')) # Kompakt speichern
-        return path
-
-    def export_csv(self, domain_list, filename="xinet_data.csv"):
-        path = os.path.join(self.output_dir, filename)
-        with open(path, "w", encoding="utf-8", newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow(["domain"])
-            for d in domain_list:
-                writer.writerow([d])
+            # separators macht die Datei so klein wie moeglich
+            json.dump(web_data, f, separators=(',', ':')) 
         return path
