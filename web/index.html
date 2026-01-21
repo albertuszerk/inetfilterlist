@@ -33,7 +33,7 @@
         .link-box { background: #f8f9fa; border-left: 4px solid #3498db; padding: 15px; margin-top: 15px; }
         .link-url { font-family: monospace; font-size: 0.85em; color: #e74c3c; word-break: break-all; text-decoration: none; }
 
-        .preview-box { background: #1e1e1e; color: #2ecc71; padding: 15px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 0.85em; max-height: 150px; overflow-y: auto; margin-top: 10px; }
+        .preview-box { background: #1e1e1e; color: #2ecc71; padding: 15px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 0.85em; max-height: 200px; overflow-y: auto; margin-top: 10px; }
         
         .btn-main { width: 100%; background: var(--accent); color: white; border: none; padding: 15px; border-radius: 8px; font-size: 1.1em; font-weight: bold; cursor: pointer; transition: background 0.3s; }
         .btn-main:hover { background: #219150; }
@@ -59,7 +59,7 @@
         <h3>1. Schutz-Level waehlen</h3>
         <div class="check-group">
             <label class="check-item"><input type="checkbox" checked value="violence"> VIOLENCE</label>
-            <label class="check-item"><input type="checkbox" checked value="sex"> SEX</label>
+            <label class="check-item" id="check-sex"><input type="checkbox" checked value="sex"> SEX</label>
             <label class="check-item"><input type="checkbox" checked value="vpn_proxy"> VPN_PROXY</label>
             <label class="check-item"><input type="checkbox" checked value="gambling"> GAMBLING</label>
             <label class="check-item"><input type="checkbox" checked value="ads_tracking"> ADS_TRACKING</label>
@@ -73,29 +73,32 @@
             <label>Anzahl der Domains (Top-Ranking): <b id="limit-val">10000</b></label>
             <input type="range" id="limit-range" min="1000" max="150000" step="1000" value="10000">
         </div>
-        <textarea id="whitelist-input" placeholder="Whitelist (Ausnahmen - eine pro Zeile): z.B. facebook.com"></textarea>
+        <textarea id="whitelist-input" placeholder="Whitelist (Ausnahmen - eine pro Zeile): z.B. facebook.com" oninput="updateUI()"></textarea>
     </div>
 
     <div class="config-card">
         <h3>3. Ziel-System & Direkt-Link</h3>
-        <select id="target-system" style="width: 100%; padding: 12px; border-radius: 4px; background: white; border: 1px solid #ccc;" onchange="updateLink()">
-            <option value="xinet_universal_hosts.txt">Universal HOSTS (0.0.0.0)</option>
-            <option value="xinet_flint2.hosts">GL.iNet Flint 2 (OpenWrt/HOSTS)</option>
-            <option value="xinet_adguard.txt">AdGuard Home / Flint 2</option>
-            <option value="xinet_pihole.txt">Pi-hole DNS</option>
-            <option value="xinet_bind.rpz">RPZ Policy Zone (BIND)</option>
-            <option value="xinet_mikrotik.rsc">Mikrotik RouterOS</option>
-            <option value="xinet_data.json">JSON Data Feed</option>
+        <select id="target-system" style="width: 100%; padding: 12px; border-radius: 4px; background: white; border: 1px solid #ccc;" onchange="updateUI()">
+            <option value="hosts">Universal HOSTS (0.0.0.0)</option>
+            <option value="flint2">GL.iNet Flint 2 (HOSTS)</option>
+            <option value="adguard">AdGuard Home</option>
+            <option value="pihole">Pi-hole DNS</option>
+            <option value="rpz">RPZ Policy Zone (BIND)</option>
+            <option value="mikrotik">Mikrotik RouterOS</option>
+            <option value="pfsense">pfSense Resolver</option>
+            <option value="unbound">Unbound DNS</option>
+            <option value="json">JSON Data Feed</option>
+            <option value="csv">CSV Export</option>
         </select>
         <div class="link-box">
             <div style="font-weight: bold; font-size: 0.8em; margin-bottom: 5px;">Direkt-Link fuer den Router:</div>
-            <a id="router-link" class="link-url" target="_blank" href="#">Waehle ein System...</a>
+            <a id="router-link" class="link-url" target="_blank" href="#">Lade Link...</a>
         </div>
     </div>
 
     <div class="config-card">
-        <h3>Vorschau (Preview)</h3>
-        <div class="preview-box" id="preview-area">--- Vorschau (HOSTS) ---<br>(Lade Daten...)</div>
+        <h3 id="preview-title">Vorschau (Preview)</h3>
+        <div class="preview-box" id="preview-area">--- Vorschau ---<br>(Lade Daten...)</div>
     </div>
 
     <button class="btn-main" onclick="downloadConfig()">Konfiguration als Datei herunterladen</button>
@@ -106,24 +109,36 @@
     let masterStats = null;
     let exportData = [];
 
+    // Mapping fuer Dateinamen und Formate
+    const systemConfigs = {
+        "hosts": { file: "xinet_universal_hosts.txt", prefix: "0.0.0.0 " },
+        "flint2": { file: "xinet_flint2.hosts", prefix: "0.0.0.0 " },
+        "adguard": { file: "xinet_adguard.txt", prefix: "||", suffix: "^" },
+        "pihole": { file: "xinet_pihole.txt", prefix: "" },
+        "rpz": { file: "xinet_bind.rpz", prefix: "", suffix: " CNAME ." },
+        "mikrotik": { file: "xinet_mikrotik.rsc", prefix: "/ip dns static add name=", suffix: " address=0.0.0.0" },
+        "pfsense": { file: "xinet_pfsense.conf", prefix: "local-zone: \"", suffix: "\" static" },
+        "unbound": { file: "xinet_unbound.conf", prefix: "local-data: \"", suffix: " A 0.0.0.0\"" },
+        "json": { file: "xinet_data.json", format: "json" },
+        "csv": { file: "xinet_data.csv", format: "csv" }
+    };
+
     async function init() {
         try {
-            // Pfad von /web/ zu /output/ korrigiert
             const statsRes = await fetch('../output/status.json');
             masterStats = await statsRes.json();
             
             const dataRes = await fetch('../output/xinet_data.json');
             exportData = await dataRes.json();
 
-            renderDashboard();
-            updateLink();
-            updatePreview();
+            renderStats();
+            updateUI();
         } catch (e) {
-            document.getElementById('sources-list').innerText = "Fehler: Datenpfad nicht gefunden (../output/status.json).";
+            document.getElementById('sources-list').innerText = "Fehler: Daten konnten nicht geladen werden.";
         }
     }
 
-    function renderDashboard() {
+    function renderStats() {
         document.getElementById('stat-total').innerText = masterStats.total_domains.toLocaleString();
         let filterCount = 0;
         const sourcesDiv = document.getElementById('sources-list');
@@ -136,41 +151,86 @@
         document.getElementById('stat-filters').innerText = filterCount.toLocaleString();
     }
 
-    function updateLink() {
-        const fileName = document.getElementById('target-system').value;
-        const linkElem = document.getElementById('router-link');
-        const fullUrl = GITHUB_BASE + fileName;
-        linkElem.href = fullUrl;
-        linkElem.innerText = fullUrl;
-    }
-
-    function updatePreview() {
+    function updateUI() {
         const limit = document.getElementById('limit-range').value;
+        const systemKey = document.getElementById('target-system').value;
+        const config = systemConfigs[systemKey];
+        
         document.getElementById('limit-val').innerText = limit;
+        
+        // Whitelist extrahieren
+        const whitelistStr = document.getElementById('whitelist-input').value;
+        const whitelist = whitelistStr.split('\n').map(d => d.trim().toLowerCase()).filter(d => d);
+        
+        // Kategorien extrahieren
         const selectedCats = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(c => c.value);
         
-        const filtered = exportData.filter(item => selectedCats.includes(item.c)).slice(0, limit);
+        // Filter-Logik
+        const filtered = exportData.filter(item => 
+            selectedCats.includes(item.c) && !whitelist.includes(item.d.toLowerCase())
+        ).slice(0, limit);
+
         document.getElementById('stat-selected').innerText = filtered.length.toLocaleString();
 
+        // Link aktualisieren
+        const linkElem = document.getElementById('router-link');
+        const fullUrl = GITHUB_BASE + config.file;
+        linkElem.href = fullUrl;
+        linkElem.innerText = fullUrl;
+
+        // Vorschau aktualisieren
         const preview = document.getElementById('preview-area');
-        preview.innerHTML = "--- Vorschau (HOSTS) ---<br>";
-        filtered.slice(0, 10).forEach(i => preview.innerHTML += `0.0.0.0 ${i.d}<br>`);
+        document.getElementById('preview-title').innerText = `Vorschau (${systemKey.toUpperCase()})`;
+        
+        if (filtered.length === 0) {
+            preview.innerHTML = "--- Keine Daten fuer diese Auswahl ---";
+            return;
+        }
+
+        let previewText = `--- Vorschau (${config.file}) ---<br>`;
+        filtered.slice(0, 10).forEach(i => {
+            if (config.format === "json") {
+                previewText += JSON.stringify(i) + "<br>";
+            } else if (config.format === "csv") {
+                previewText += `${i.d},${i.c}<br>`;
+            } else {
+                previewText += `${config.prefix || ""}${i.d}${config.suffix || ""}<br>`;
+            }
+        });
+        preview.innerHTML = previewText;
     }
 
     function downloadConfig() {
+        const systemKey = document.getElementById('target-system').value;
+        const config = systemConfigs[systemKey];
         const limit = document.getElementById('limit-range').value;
+        const whitelistStr = document.getElementById('whitelist-input').value;
+        const whitelist = whitelistStr.split('\n').map(d => d.trim().toLowerCase()).filter(d => d);
         const selectedCats = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(c => c.value);
-        const filtered = exportData.filter(item => selectedCats.includes(item.c)).slice(0, limit);
-        const content = "# X-iNet Export\n" + filtered.map(i => `0.0.0.0 ${i.d}`).join("\n");
+        
+        const filtered = exportData.filter(item => 
+            selectedCats.includes(item.c) && !whitelist.includes(item.d.toLowerCase())
+        ).slice(0, limit);
+
+        let content = "";
+        if (config.format === "json") {
+            content = JSON.stringify(filtered, null, 2);
+        } else if (config.format === "csv") {
+            content = "domain,category\n" + filtered.map(i => `${i.d},${i.c}`).join("\n");
+        } else {
+            content = filtered.map(i => `${config.prefix || ""}${i.d}${config.suffix || ""}`).join("\n");
+        }
+
         const blob = new Blob([content], { type: 'text/plain' });
         const a = document.createElement('a');
         a.href = window.URL.createObjectURL(blob);
-        a.download = `xinet_filter.txt`;
+        a.download = config.file;
         a.click();
     }
 
-    document.getElementById('limit-range').addEventListener('input', updatePreview);
-    document.querySelectorAll('input[type="checkbox"]').forEach(c => c.addEventListener('change', updatePreview));
+    document.getElementById('limit-range').addEventListener('input', updateUI);
+    document.querySelectorAll('input[type="checkbox"]').forEach(c => c.addEventListener('change', updateUI));
+    
     init();
 </script>
 </body>
