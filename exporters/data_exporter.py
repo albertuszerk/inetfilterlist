@@ -8,21 +8,29 @@ class DataExporter:
     def export_web_json(self, master_data, filename="xinet_data.json", limit=150000):
         path = os.path.join(self.output_dir, filename)
         
-        # Wir sortieren nach Ranking
+        # Sortierung nach Ranking
         sorted_domains = sorted(
             master_data.items(),
-            key=lambda x: x[1]['rank'] if x[1]['rank'] is not None else 9999999
+            key=lambda x: x[1].get('rank') if isinstance(x[1], dict) and x[1].get('rank') is not None else 9999999
         )[:limit]
         
         web_data = []
         for domain, info in sorted_domains:
-            # WICHTIG: Hier wird das Objekt mit Domain (d) und Kategorie (c) gebaut
+            # Sicherheits-Check: Ist info ein Dictionary und hat es den Key 'category'?
+            if isinstance(info, dict):
+                # Wir suchen nach 'category' oder 'cat' (beugt Fehlern vor)
+                category = info.get('category') or info.get('cat') or "unknown"
+            else:
+                # Falls info nur ein String ist (alter Fehlerzustand)
+                category = "unknown"
+                
             web_data.append({
                 "d": domain,
-                "c": info['category']
+                "c": category
             })
             
         with open(path, "w", encoding="utf-8") as f:
-            # separators macht die Datei so klein wie moeglich
             json.dump(web_data, f, separators=(',', ':')) 
+        
+        print(f"Erfolgreich exportiert: {path} ({len(web_data)} Eintraege)")
         return path
