@@ -1,5 +1,6 @@
 import sys
 import os
+import json
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
@@ -7,7 +8,6 @@ sys.path.insert(0, BASE_DIR)
 try:
     from core.master_table import MasterTable
     from adapters.source_handler import SourceHandler
-    from exporters.data_exporter import DataExporter
 except ImportError as e:
     print(f"❌ Fehler beim Laden der Module: {e}")
     sys.exit(1)
@@ -19,11 +19,9 @@ def run_pipeline():
     handler = SourceHandler()
     
     data_dir = os.path.join(BASE_DIR, "data")
-    if not os.path.exists(data_dir): os.makedirs(data_dir)
-    
     ranking_file = os.path.join(data_dir, "top_ranking.csv")
     
-    # Pruefen und ggf. mit Fallback herunterladen
+    # Download Ranking falls nicht vorhanden
     if not os.path.exists(ranking_file):
         handler.download_ranking(ranking_file)
     
@@ -41,19 +39,18 @@ def run_pipeline():
 
     for s in sources:
         print(f"Verarbeite: {s['name']}...")
-        try:
-            domains = handler.fetch(s['url'])
-            for d in domains:
-                master.add_domain(d, s['cat'])
-        except Exception as e:
-            print(f"⚠️ Fehler bei {s['name']}: {e}")
+        domains = handler.fetch(s['url'])
+        for d in domains:
+            master.add_domain(d, s['cat'])
 
     out = os.path.join(BASE_DIR, "output")
     if not os.path.exists(out): os.makedirs(out)
 
-    print("Erzeuge Web-Export (JSON)...")
-    exporter = DataExporter(out)
-    exporter.export_web_json(master.data, "xinet_data.json", limit=150000)
+    print("Erzeuge Web-Export (JSON) mit strategischem Boost...")
+    export_data = master.get_export_data(limit=150000)
+    
+    with open(os.path.join(out, "xinet_data.json"), "w") as f:
+        json.dump(export_data, f)
 
     print("Erzeuge Status-Bericht...")
     master.generate_status_json(out)
