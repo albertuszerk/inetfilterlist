@@ -11,6 +11,12 @@
         .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
         .neon-text { text-shadow: 0 0 10px rgba(34, 197, 94, 0.5); }
         .stat-value { font-family: 'JetBrains Mono', 'Courier New', monospace; letter-spacing: -1px; }
+        
+        /* FIX: Erzwingt dunklen Hintergrund für Dropdown-Optionen */
+        select option {
+            background-color: #1a1c2c !important;
+            color: white !important;
+        }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -90,7 +96,7 @@
                 </div>
                 
                 <div class="mt-6 p-4 bg-black/40 border border-white/5 rounded-xl">
-                    <div class="text-[10px] uppercase opacity-40 mb-2">Link fuer den Router [cite: 2026-01-20]:</div>
+                    <div class="text-[10px] uppercase opacity-40 mb-2">Link fuer den Router:</div>
                     <a id="router-link" class="text-xs text-info font-mono break-all hover:underline" target="_blank" href="#">Wird geladen...</a>
                 </div>
             </div>
@@ -151,7 +157,6 @@
         let fc = 0, html = "";
         for (const [c, n] of Object.entries(masterStats.categories)) {
             fc += n; 
-            // Hier werden die pulsierenden Icons generiert
             html += `
                 <div class="flex justify-between items-center text-[11px]">
                     <span class="flex items-center gap-3">
