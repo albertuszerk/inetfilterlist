@@ -1,88 +1,114 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <title>X-iNet Filter Konfigurator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>X-iNet Dashboard v1.1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.9.4/dist/full.css" rel="stylesheet" type="text/css" />
     <style>
-        :root { --primary: #2c3e50; --secondary: #34495e; --accent: #27ae60; --bg: #f4f7f6; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: #333; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: auto; }
-        h1 { text-align: center; color: var(--primary); margin-bottom: 30px; }
-        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
-        .stat-card { background: var(--secondary); color: white; padding: 20px; border-radius: 8px; text-align: center; }
-        .stat-card .val { font-size: 1.8em; font-weight: bold; color: #2ecc71; display: block; }
-        .stat-card .lab { font-size: 0.85em; opacity: 0.8; }
-        .config-card { background: white; padding: 25px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .config-card h3 { margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; font-size: 1.1em; color: var(--primary); }
-        .dot { height: 12px; width: 12px; background-color: #2ecc71; border-radius: 50%; display: inline-block; margin-right: 10px; }
-        .check-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .check-item { display: flex; align-items: center; cursor: pointer; }
-        input[type="checkbox"] { margin-right: 10px; }
-        .slider-box { margin: 20px 0; }
-        input[type="range"] { width: 100%; cursor: pointer; }
-        textarea { width: 100%; height: 80px; margin-top: 10px; border: 1px solid #ddd; border-radius: 4px; padding: 10px; box-sizing: border-box; }
-        .link-box { background: #f8f9fa; border-left: 4px solid #3498db; padding: 15px; margin-top: 15px; }
-        .link-url { font-family: monospace; font-size: 0.85em; color: #e74c3c; word-break: break-all; text-decoration: none; }
-        .preview-box { background: #1e1e1e; color: #2ecc71; padding: 15px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 0.85em; max-height: 200px; overflow-y: auto; }
-        .btn-main { width: 100%; background: var(--accent); color: white; border: none; padding: 15px; border-radius: 8px; font-size: 1.1em; font-weight: bold; cursor: pointer; }
+        body { background: radial-gradient(circle at top left, #1a1c2c, #0f1016); min-height: 100vh; }
+        .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .neon-text { text-shadow: 0 0 10px rgba(34, 197, 94, 0.5); }
+        .stat-value { font-family: 'JetBrains Mono', 'Courier New', monospace; letter-spacing: -1px; }
     </style>
 </head>
-<body>
-<div class="container">
-    <h1>X-iNet Filter Konfigurator</h1>
-    <div class="stats-row">
-        <div class="stat-card"><span class="val" id="stat-total">0</span><span class="lab">Domains verarbeitet</span></div>
-        <div class="stat-card"><span class="val" id="stat-filters">0</span><span class="lab">Einzigartige Filter</span></div>
-        <div class="stat-card" style="background: #2c3e50;"><span class="val" id="stat-selected" style="color:#3498db;">0</span><span class="lab">Deine aktuelle Auswahl</span></div>
-    </div>
-    <div class="config-card">
-        <h3>Quellen-Status (Ampeln)</h3>
-        <div id="sources-list">Analysiere Datenbank...</div>
-    </div>
-    <div class="config-card">
-        <h3>1. Schutz-Level waehlen</h3>
-        <div class="check-group">
-            <label class="check-item"><input type="checkbox" checked value="violence"> VIOLENCE</label>
-            <label class="check-item"><input type="checkbox" checked value="sex"> SEX</label>
-            <label class="check-item"><input type="checkbox" checked value="vpn_proxy"> VPN_PROXY</label>
-            <label class="check-item"><input type="checkbox" checked value="gambling"> GAMBLING</label>
-            <label class="check-item"><input type="checkbox" checked value="ads_tracking"> ADS_TRACKING</label>
-            <label class="check-item"><input type="checkbox" checked value="social"> SOCIAL</label>
+<body class="p-4 md:p-8">
+
+<div class="max-w-6xl mx-auto space-y-6">
+    
+    <header class="flex flex-col md:flex-row justify-between items-center gap-6 mb-10">
+        <div>
+            <h1 class="text-4xl font-black italic tracking-tighter text-white">X-iNET <span class="text-success neon-text">v1.1</span></h1>
+            <p class="text-xs uppercase tracking-widest opacity-50">Multi-Format Filter Pipeline</p>
         </div>
-    </div>
-    <div class="config-card">
-        <h3>2. Daten-Limiter & Whitelist</h3>
-        <div class="slider-box">
-            <label>Anzahl der Domains (Top-Ranking): <b id="limit-val">10'000</b></label>
-            <input type="range" id="limit-range" min="1000" max="150000" step="1000" value="10000">
+        
+        <div class="stats glass-card shadow-2xl">
+            <div class="stat">
+                <div class="stat-title text-xs uppercase">Domains</div>
+                <div class="stat-value text-success text-2xl" id="stat-total">0</div>
+                <div class="stat-desc text-[10px]">VERARBEITET</div>
+            </div>
+            <div class="stat border-x border-white/5">
+                <div class="stat-title text-xs uppercase">Filter</div>
+                <div class="stat-value text-info text-2xl" id="stat-filters">0</div>
+                <div class="stat-desc text-[10px]">EINZIGARTIG</div>
+            </div>
+            <div class="stat">
+                <div class="stat-title text-xs uppercase">Auswahl</div>
+                <div class="stat-value text-warning text-2xl" id="stat-selected">0</div>
+                <div class="stat-desc text-[10px]">AKTIV</div>
+            </div>
         </div>
-        <textarea id="whitelist-input" placeholder="Whitelist (Ausnahmen - eine pro Zeile): z.B. facebook.com" oninput="saveAndRefresh()"></textarea>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <aside class="lg:col-span-4 space-y-6">
+            <div class="card glass-card p-6 rounded-3xl">
+                <h3 class="text-xs font-bold uppercase mb-4 tracking-widest text-white/70">Quellen-Status (Live)</h3>
+                <div id="sources-list" class="space-y-4">
+                    <div class="flex items-center gap-3"><span class="loading loading-ring loading-xs"></span> Initialisiere...</div>
+                </div>
+            </div>
+
+            <div class="card glass-card p-6 rounded-3xl">
+                <h3 class="text-xs font-bold uppercase mb-4 tracking-widest text-white/70">1. Schutz-Level (Toggles)</h3>
+                <div class="grid grid-cols-1 gap-4" id="cat-group"></div>
+            </div>
+        </aside>
+
+        <main class="lg:col-span-8 space-y-6">
+            <div class="card glass-card p-8 rounded-3xl">
+                <h3 class="text-xs font-bold uppercase mb-6 tracking-widest text-white/70">2. Daten-Limiter & Whitelist</h3>
+                <div class="space-y-8">
+                    <div class="form-control">
+                        <label class="label"><span class="label-text text-white/60">Anzahl der Domains: <span class="text-success font-bold" id="limit-val">10'000</span></span></label>
+                        <input type="range" id="limit-range" min="1000" max="150000" step="1000" value="10000" class="range range-success range-xs">
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text text-white/60">Whitelist (Ausnahmen)</span></label>
+                        <textarea id="whitelist-input" class="textarea textarea-bordered bg-black/20 h-24 font-mono text-sm border-white/10" placeholder="facebook.com&#10;instagram.com" oninput="saveAndRefresh()"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card glass-card p-8 rounded-3xl">
+                <h3 class="text-xs font-bold uppercase mb-6 tracking-widest text-white/70">3. Ziel-System & Direkt-Link</h3>
+                <div class="flex flex-col md:flex-row gap-4 items-end">
+                    <div class="form-control w-full">
+                        <select id="target-system" class="select select-bordered bg-black/40 w-full border-white/10" onchange="updateUI()">
+                            <option value="hosts">Universal HOSTS [max. 1'000'000+]</option>
+                            <option value="flint2" selected>GL.iNet GL-MT6000 (Flint 2) [max. 150'000]</option>
+                            <option value="adguard">AdGuard Home [max. 200'000]</option>
+                            <option value="pihole">Pi-hole DNS [max. 500'000]</option>
+                            <option value="mikrotik">Mikrotik RouterOS [max. 20'000]</option>
+                            <option value="json">JSON Data Feed [Rohdaten]</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-success px-8 shadow-lg shadow-success/20" onclick="downloadConfig()">Download</button>
+                </div>
+                
+                <div class="mt-6 p-4 bg-black/40 border border-white/5 rounded-xl">
+                    <div class="text-[10px] uppercase opacity-40 mb-2">Link fuer den Router [cite: 2026-01-20]:</div>
+                    <a id="router-link" class="text-xs text-info font-mono break-all hover:underline" target="_blank" href="#">Wird geladen...</a>
+                </div>
+            </div>
+
+            <div class="card glass-card p-8 rounded-3xl">
+                <h3 class="text-xs font-bold uppercase mb-4 tracking-widest text-success">Vorschau (Preview)</h3>
+                <div class="bg-black/60 p-4 rounded-xl font-mono text-[11px] leading-relaxed text-success/70 max-h-48 overflow-y-auto" id="preview-area">
+                    Analysiere Datenstroeme...
+                </div>
+            </div>
+        </main>
     </div>
-    <div class="config-card">
-        <h3>3. Ziel-System & Direkt-Link</h3>
-        <select id="target-system" style="width: 100%; padding: 12px; border-radius: 4px;" onchange="updateUI()">
-            <option value="hosts">Universal HOSTS [max. 1'000'000+]</option>
-            <option value="flint2" selected>GL.iNet GL-MT6000 (Flint 2) [max. 150'000]</option>
-            <option value="adguard">AdGuard Home [max. 200'000]</option>
-            <option value="pihole">Pi-hole DNS [max. 500'000]</option>
-            <option value="mikrotik">Mikrotik RouterOS [max. 20'000]</option>
-            <option value="pfsense">pfSense Resolver [max. 150'000]</option>
-            <option value="unbound">Unbound DNS [max. 150'000]</option>
-            <option value="json">JSON Data Feed [Rohdaten]</option>
-            <option value="csv">CSV Export [Rohdaten]</option>
-            <option value="bind">RPZ Policy Zone (BIND) [max. 500'000]</option>
-        </select>
-        <div class="link-box">
-            <div style="font-weight: bold; font-size: 0.8em; margin-bottom: 5px;">Direkt-Link fuer den Router:</div>
-            <a id="router-link" class="link-url" target="_blank" href="#">Wird geladen...</a>
-        </div>
-    </div>
-    <div class="config-card">
-        <h3 id="preview-title">Vorschau (Preview)</h3>
-        <div class="preview-box" id="preview-area">Lade Daten...</div>
-    </div>
-    <button class="btn-main" onclick="downloadConfig()">Konfiguration als Datei herunterladen</button>
+
+    <footer class="text-center py-10 opacity-30 text-[10px] tracking-widest uppercase">
+        X-iNET Pipeline &bull; v1.1 &bull; 2026
+    </footer>
 </div>
+
 <script>
     const GITHUB_BASE = "https://raw.githubusercontent.com/albertuszerk/inetfilterlist/main/output/";
     let masterStats = null, exportData = [];
@@ -92,27 +118,27 @@
         adguard: { f: "xinet_adguard.txt", p: "||", s: "^" },
         pihole: { f: "xinet_pihole.txt", p: "" },
         mikrotik: { f: "xinet_mikrotik.rsc", p: "/ip dns static add name=", s: " address=0.0.0.0" },
-        pfsense: { f: "xinet_pfsense.conf", p: "local-zone: \"", s: "\" static" },
-        unbound: { f: "xinet_unbound.conf", p: "local-data: \"", s: " A 0.0.0.0\"" },
-        json: { f: "xinet_data.json", raw: true },
-        csv: { f: "xinet_data.csv", raw: true },
-        bind: { f: "xinet_bind.rpz", p: "", s: " CNAME ." }
+        json: { f: "xinet_data.json", raw: true }
     };
-
-    // Helferfunktion fuer die schoene Zahlenformatierung (1'000)
-    function fmt(num) {
-        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'");
-    }
+    const categories = ["violence", "sex", "vpn_proxy", "gambling", "ads_tracking", "social"];
+    function fmt(num) { return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'"); }
 
     async function init() {
+        const group = document.getElementById('cat-group');
+        group.innerHTML = categories.map(c => `
+            <div class="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5">
+                <span class="text-[11px] font-bold uppercase tracking-widest text-white/60">${c.replace('_', ' ')}</span>
+                <input type="checkbox" checked value="${c}" class="toggle toggle-success toggle-sm" onchange="updateUI()">
+            </div>
+        `).join('');
+
         try {
             const savedWhitelist = localStorage.getItem('xinet_whitelist_storage');
             if (savedWhitelist) document.getElementById('whitelist-input').value = savedWhitelist;
-
             const sRes = await fetch('../output/status.json'), dRes = await fetch('../output/xinet_data.json');
             masterStats = await sRes.json(); exportData = await dRes.json();
             renderStats(); updateUI();
-        } catch (e) { document.getElementById('sources-list').innerText = "Fehler beim Laden!"; }
+        } catch (e) { document.getElementById('sources-list').innerText = "Fehler beim Datenabruf."; }
     }
 
     function saveAndRefresh() {
@@ -124,7 +150,19 @@
         document.getElementById('stat-total').innerText = fmt(masterStats.total_domains);
         let fc = 0, html = "";
         for (const [c, n] of Object.entries(masterStats.categories)) {
-            fc += n; html += `<div class="source-item"><span class="dot"></span> ${c.toUpperCase()}: ${fmt(n)}</div>`;
+            fc += n; 
+            // Hier werden die pulsierenden Icons generiert
+            html += `
+                <div class="flex justify-between items-center text-[11px]">
+                    <span class="flex items-center gap-3">
+                        <span class="relative flex h-2 w-2">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
+                        </span>
+                        <span class="text-white/70 tracking-wider">${c.toUpperCase()}</span>
+                    </span>
+                    <span class="font-mono opacity-40">${fmt(n)}</span>
+                </div>`;
         }
         document.getElementById('stat-filters').innerText = fmt(fc);
         document.getElementById('sources-list').innerHTML = html;
@@ -139,13 +177,12 @@
         document.getElementById('stat-selected').innerText = fmt(filtered.length);
         const url = GITHUB_BASE + conf.f;
         document.getElementById('router-link').href = url; document.getElementById('router-link').innerText = url;
-        document.getElementById('preview-title').innerText = `Vorschau (${conf.f})`;
         let txt = "";
-        filtered.slice(0, 10).forEach(i => {
-            if (conf.raw) txt += (sk === "json" ? JSON.stringify(i) : `${i.d},${i.c}`) + "<br>";
-            else txt += `${conf.p || ""}${i.d}${conf.s || ""}<br>`;
+        filtered.slice(0, 15).forEach(i => {
+            if (conf.raw) txt += JSON.stringify(i) + "\n";
+            else txt += `${conf.p || ""}${i.d}${conf.s || ""}\n`;
         });
-        document.getElementById('preview-area').innerHTML = txt || "Keine Domains gefunden.";
+        document.getElementById('preview-area').innerText = txt || "Bereitschaft hergestellt.";
     }
 
     function downloadConfig() {
@@ -153,13 +190,10 @@
         const wl = document.getElementById('whitelist-input').value.split('\n').map(d => d.trim().toLowerCase()).filter(d => d);
         const cats = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(c => c.value);
         const filtered = exportData.filter(i => cats.includes(i.c) && !wl.includes(i.d.toLowerCase())).slice(0, document.getElementById('limit-range').value);
-        let content = "";
-        if (conf.raw) content = sk === "json" ? JSON.stringify(filtered, null, 2) : "domain,cat\n" + filtered.map(i => `${i.d},${i.c}`).join("\n");
-        else content = filtered.map(i => `${conf.p || ""}${i.d}${conf.s || ""}`).join("\n");
+        let content = filtered.map(i => conf.raw ? JSON.stringify(i) : `${conf.p || ""}${i.d}${conf.s || ""}`).join("\n");
         const a = document.createElement('a'); a.href = window.URL.createObjectURL(new Blob([content])); a.download = conf.f; a.click();
     }
     document.getElementById('limit-range').addEventListener('input', updateUI);
-    document.querySelectorAll('input[type="checkbox"]').forEach(c => c.addEventListener('change', updateUI));
     init();
 </script>
 </body>
