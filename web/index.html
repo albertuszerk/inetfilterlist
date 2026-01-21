@@ -2,7 +2,6 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>X-iNet Filter Konfigurator</title>
     <style>
         :root { --primary: #2c3e50; --secondary: #34495e; --accent: #27ae60; --bg: #f4f7f6; }
@@ -10,7 +9,7 @@
         .container { max-width: 800px; margin: auto; }
         h1 { text-align: center; color: var(--primary); margin-bottom: 30px; }
         
-        /* Stats Cards - Jetzt nur noch 2 Spalten */
+        /* Stats Cards - Jetzt nur 2 Spalten wie besprochen */
         .stats-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 25px; }
         .stat-card { background: var(--secondary); color: white; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .stat-card .val { font-size: 1.8em; font-weight: bold; color: #2ecc71; display: block; }
@@ -19,7 +18,6 @@
         .config-card { background: white; padding: 25px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .config-card h3 { margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; font-size: 1.1em; color: var(--primary); }
         
-        /* Quellen-Status (Ampeln) */
         #sources-list { line-height: 1.8; }
         .source-item { display: flex; align-items: center; font-size: 0.9em; }
         .dot { height: 12px; width: 12px; background-color: #2ecc71; border-radius: 50%; display: inline-block; margin-right: 10px; }
@@ -37,6 +35,8 @@
 
         .btn-main { width: 100%; background: var(--accent); color: white; border: none; padding: 15px; border-radius: 8px; font-size: 1.1em; font-weight: bold; cursor: pointer; transition: background 0.3s; }
         .btn-main:hover { background: #219150; }
+        
+        .error-msg { color: #e74c3c; font-size: 0.9em; padding: 10px; background: #fdf2f2; border-radius: 4px; display: none; }
     </style>
 </head>
 <body>
@@ -51,7 +51,8 @@
 
     <div class="config-card">
         <h3>Quellen-Status (Ampeln)</h3>
-        <div id="sources-list">Lade Status...</div>
+        <div id="error-display" class="error-msg"></div>
+        <div id="sources-list">Initialisiere Analyse...</div>
     </div>
 
     <div class="config-card">
@@ -72,22 +73,22 @@
             <label>Anzahl der Domains (Top-Ranking): <b id="limit-val">10000</b></label>
             <input type="range" id="limit-range" min="1000" max="150000" step="1000" value="10000">
         </div>
-        <textarea id="whitelist" placeholder="Whitelist (Ausnahmen - eine pro Zeile): z.B. wikipedia.org"></textarea>
+        <textarea id="whitelist" placeholder="Whitelist (Ausnahmen - eine pro Zeile): z.B. facebook.com"></textarea>
     </div>
 
     <div class="config-card">
         <h3>3. Ziel-System & Direkt-Link</h3>
-        <select id="target-system" style="width: 100%; padding: 10px; border-radius: 4px; background: white; border: 1px solid #ddd;">
-            <option>Universal HOSTS (0.0.0.0)</option>
-            <option>RPZ Policy Zone (BIND)</option>
-            <option>AdGuard Home DNS</option>
-            <option>Pi-hole Blocklist</option>
-            <option>Unbound DNS Configuration</option>
-            <option>Mikrotik RouterOS Static</option>
-            <option>pfSense Unbound Resolver</option>
-            <option>Dnsmasq Configuration</option>
-            <option>JSON Data Feed</option>
-            <option>YAML Raw Source</option>
+        <select id="target-system" style="width: 100%; padding: 12px; border-radius: 4px; background: white; border: 1px solid #ccc;">
+            <option value="hosts">Universal HOSTS (0.0.0.0)</option>
+            <option value="router">X-iNet Router Pro / Gateway</option>
+            <option value="pihole">Pi-hole DNS</option>
+            <option value="adguard">AdGuard Home</option>
+            <option value="bind">RPZ Policy Zone (BIND)</option>
+            <option value="mikrotik">Mikrotik RouterOS</option>
+            <option value="pfsense">pfSense Resolver</option>
+            <option value="unbound">Unbound DNS</option>
+            <option value="json">JSON Data Feed</option>
+            <option value="csv">CSV Export</option>
         </select>
         <div class="link-box">
             <div style="font-weight: bold; font-size: 0.8em; margin-bottom: 5px;">Direkt-Link fuer den Router:</div>
@@ -99,35 +100,38 @@
 </div>
 
 <script>
-    let masterStats = {};
+    let masterStats = null;
     let exportData = [];
 
     async function init() {
+        const errDiv = document.getElementById('error-display');
         try {
-            // Lade Status-Bericht
-            const statsRes = await fetch('output/status.json');
+            // Fetch mit relativem Pfad
+            const statsRes = await fetch('./output/status.json');
+            if (!statsRes.ok) throw new Error("Status-Datei nicht lesbar.");
             masterStats = await statsRes.json();
             
-            // Lade Export-Daten
-            const dataRes = await fetch('output/xinet_data.json');
+            const dataRes = await fetch('./output/xinet_data.json');
+            if (!dataRes.ok) throw new Error("Export-Daten nicht lesbar.");
             exportData = await dataRes.json();
 
             renderDashboard();
         } catch (e) {
-            console.error("Fehler beim Initialisieren:", e);
-            document.getElementById('sources-list').innerText = "Fehler beim Laden der Daten. Bitte pruefen Sie, ob der 'output'-Ordner existiert.";
+            console.error(e);
+            errDiv.style.display = "block";
+            errDiv.innerText = "Fehler: Die Daten konnten nicht geladen werden. Stellen Sie sicher, dass Sie die Seite ueber einen lokalen Webserver (z.B. VS Code Live Server) oeffnen.";
+            document.getElementById('sources-list').innerText = "Status-Abruf fehlgeschlagen.";
         }
     }
 
     function renderDashboard() {
-        // Stats befuellen
+        if (!masterStats) return;
         document.getElementById('stat-total').innerText = masterStats.total_domains.toLocaleString();
         
         let filterCount = 0;
         const sourcesDiv = document.getElementById('sources-list');
         sourcesDiv.innerHTML = "";
 
-        // Ampeln befuellen
         for (const [cat, count] of Object.entries(masterStats.categories)) {
             filterCount += count;
             sourcesDiv.innerHTML += `
@@ -144,27 +148,21 @@
         const selectedCats = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(c => c.value);
         const target = document.getElementById('target-system').value;
         
-        // Filterung fuer den Download
         const filtered = exportData
             .filter(item => selectedCats.includes(item.c))
             .slice(0, limit);
 
-        let content = "";
-        if (target.includes("HOSTS")) {
-            content = "# X-iNet Filter Export\n" + filtered.map(i => `0.0.0.0 ${i.d}`).join("\n");
-        } else {
-            content = JSON.stringify(filtered, null, 2);
-        }
+        let content = "# X-iNet Filter Export\n";
+        content += filtered.map(i => `0.0.0.0 ${i.d}`).join("\n");
 
         const blob = new Blob([content], { type: 'text/plain' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `xinet_config_${new Date().toISOString().slice(0,10)}.txt`;
+        a.download = `xinet_config.txt`;
         a.click();
     }
 
-    // Slider-Update
     document.getElementById('limit-range').addEventListener('input', (e) => {
         document.getElementById('limit-val').innerText = e.target.value;
     });
