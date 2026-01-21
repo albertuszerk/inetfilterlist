@@ -2,43 +2,59 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>X-iNet Filter Konfigurator</title>
     <style>
         :root { --primary: #2c3e50; --secondary: #34495e; --accent: #27ae60; --bg: #f4f7f6; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: #333; margin: 0; padding: 20px; }
         .container { max-width: 800px; margin: auto; }
         h1 { text-align: center; color: var(--primary); margin-bottom: 30px; }
+        
         .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
-        .stat-card { background: var(--secondary); color: white; padding: 20px; border-radius: 8px; text-align: center; }
+        .stat-card { background: var(--secondary); color: white; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .stat-card .val { font-size: 1.8em; font-weight: bold; color: #2ecc71; display: block; }
-        .stat-card .lab { font-size: 0.85em; opacity: 0.8; }
+        .stat-card .lab { font-size: 0.85em; opacity: 0.8; margin-top: 5px; }
+
         .config-card { background: white; padding: 25px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .config-card h3 { margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; font-size: 1.1em; color: var(--primary); }
+        
+        #sources-list { line-height: 1.8; }
+        .source-item { display: flex; align-items: center; font-size: 0.9em; }
         .dot { height: 12px; width: 12px; background-color: #2ecc71; border-radius: 50%; display: inline-block; margin-right: 10px; }
+
         .check-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
         .check-item { display: flex; align-items: center; cursor: pointer; }
         input[type="checkbox"] { margin-right: 10px; }
+        
         .slider-box { margin: 20px 0; }
         input[type="range"] { width: 100%; cursor: pointer; }
         textarea { width: 100%; height: 80px; margin-top: 10px; border: 1px solid #ddd; border-radius: 4px; padding: 10px; box-sizing: border-box; }
+
         .link-box { background: #f8f9fa; border-left: 4px solid #3498db; padding: 15px; margin-top: 15px; }
         .link-url { font-family: monospace; font-size: 0.85em; color: #e74c3c; word-break: break-all; text-decoration: none; }
-        .preview-box { background: #1e1e1e; color: #2ecc71; padding: 15px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 0.85em; max-height: 200px; overflow-y: auto; }
-        .btn-main { width: 100%; background: var(--accent); color: white; border: none; padding: 15px; border-radius: 8px; font-size: 1.1em; font-weight: bold; cursor: pointer; }
+
+        .preview-box { background: #1e1e1e; color: #2ecc71; padding: 15px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 0.85em; max-height: 200px; overflow-y: auto; margin-top: 10px; }
+        
+        .btn-main { width: 100%; background: var(--accent); color: white; border: none; padding: 15px; border-radius: 8px; font-size: 1.1em; font-weight: bold; cursor: pointer; transition: background 0.3s; }
+        .btn-main:hover { background: #219150; }
     </style>
 </head>
 <body>
+
 <div class="container">
     <h1>X-iNet Filter Konfigurator</h1>
+
     <div class="stats-row">
         <div class="stat-card"><span class="val" id="stat-total">0</span><span class="lab">Domains verarbeitet</span></div>
         <div class="stat-card"><span class="val" id="stat-filters">0</span><span class="lab">Einzigartige Filter</span></div>
         <div class="stat-card" style="background: #2c3e50;"><span class="val" id="stat-selected" style="color:#3498db;">0</span><span class="lab">Deine aktuelle Auswahl</span></div>
     </div>
+
     <div class="config-card">
         <h3>Quellen-Status (Ampeln)</h3>
         <div id="sources-list">Analysiere Datenbank...</div>
     </div>
+
     <div class="config-card">
         <h3>1. Schutz-Level waehlen</h3>
         <div class="check-group">
@@ -50,39 +66,44 @@
             <label class="check-item"><input type="checkbox" checked value="social"> SOCIAL</label>
         </div>
     </div>
+
     <div class="config-card">
         <h3>2. Daten-Limiter & Whitelist</h3>
         <div class="slider-box">
             <label>Anzahl der Domains (Top-Ranking): <b id="limit-val">10000</b></label>
             <input type="range" id="limit-range" min="1000" max="150000" step="1000" value="10000">
         </div>
-        <textarea id="whitelist-input" placeholder="Whitelist (Ausnahmen - eine pro Zeile): z.B. facebook.com" oninput="updateUI()"></textarea>
+        <textarea id="whitelist-input" placeholder="Whitelist (Ausnahmen - eine pro Zeile): z.B. facebook.com" oninput="saveAndRefresh()"></textarea>
     </div>
+
     <div class="config-card">
         <h3>3. Ziel-System & Direkt-Link</h3>
-        <select id="target-system" style="width: 100%; padding: 12px; border-radius: 4px;" onchange="updateUI()">
-            <option value="hosts">Universal HOSTS (0.0.0.0)</option>
-            <option value="flint2">X-iNet Router Pro / Flint 2 (Plain)</option>
-            <option value="adguard">AdGuard Home</option>
-            <option value="pihole">Pi-hole DNS</option>
-            <option value="mikrotik">Mikrotik RouterOS</option>
-            <option value="pfsense">pfSense Resolver</option>
-            <option value="unbound">Unbound DNS</option>
-            <option value="json">JSON Data Feed</option>
-            <option value="csv">CSV Export</option>
-            <option value="bind">RPZ Policy Zone (BIND)</option>
+        <select id="target-system" style="width: 100%; padding: 12px; border-radius: 4px; background: white; border: 1px solid #ccc;" onchange="updateUI()">
+            <option value="hosts">Universal HOSTS (max. 1M+)</option>
+            <option value="flint2">GL.iNet GL-MT6000 (Flint 2) (max. 150k)</option>
+            <option value="adguard">AdGuard Home (max. 200k)</option>
+            <option value="pihole">Pi-hole DNS (max. 500k)</option>
+            <option value="mikrotik">Mikrotik RouterOS (max. 20k)</option>
+            <option value="pfsense">pfSense Resolver (max. 150k)</option>
+            <option value="unbound">Unbound DNS (max. 150k)</option>
+            <option value="json">JSON Data Feed (Rohdaten)</option>
+            <option value="csv">CSV Export (Rohdaten)</option>
+            <option value="bind">RPZ Policy Zone (BIND) (max. 500k)</option>
         </select>
         <div class="link-box">
             <div style="font-weight: bold; font-size: 0.8em; margin-bottom: 5px;">Direkt-Link fuer den Router:</div>
             <a id="router-link" class="link-url" target="_blank" href="#">Wird geladen...</a>
         </div>
     </div>
+
     <div class="config-card">
         <h3 id="preview-title">Vorschau (Preview)</h3>
-        <div class="preview-box" id="preview-area">Lade Daten...</div>
+        <div class="preview-box" id="preview-area">--- Vorschau ---<br>(Lade Daten...)</div>
     </div>
+
     <button class="btn-main" onclick="downloadConfig()">Konfiguration als Datei herunterladen</button>
 </div>
+
 <script>
     const GITHUB_BASE = "https://raw.githubusercontent.com/albertuszerk/inetfilterlist/main/output/";
     let masterStats = null, exportData = [];
@@ -98,13 +119,31 @@
         csv: { f: "xinet_data.csv", raw: true },
         bind: { f: "xinet_bind.rpz", p: "", s: " CNAME ." }
     };
+
     async function init() {
         try {
-            const sRes = await fetch('../output/status.json'), dRes = await fetch('../output/xinet_data.json');
-            masterStats = await sRes.json(); exportData = await dRes.json();
-            renderStats(); updateUI();
-        } catch (e) { document.getElementById('sources-list').innerText = "Fehler beim Laden!"; }
+            // Persistente Whitelist laden
+            const savedWhitelist = localStorage.getItem('xinet_whitelist_storage');
+            if (savedWhitelist) {
+                document.getElementById('whitelist-input').value = savedWhitelist;
+            }
+
+            const sRes = await fetch('../output/status.json');
+            const dRes = await fetch('../output/xinet_data.json');
+            masterStats = await sRes.json();
+            exportData = await dRes.json();
+            
+            renderStats();
+            updateUI();
+        } catch (e) { document.getElementById('sources-list').innerText = "Fehler beim Laden der Daten!"; }
     }
+
+    function saveAndRefresh() {
+        const currentWhitelist = document.getElementById('whitelist-input').value;
+        localStorage.setItem('xinet_whitelist_storage', currentWhitelist);
+        updateUI();
+    }
+
     function renderStats() {
         document.getElementById('stat-total').innerText = masterStats.total_domains.toLocaleString();
         let fc = 0, html = "";
@@ -114,16 +153,21 @@
         document.getElementById('stat-filters').innerText = fc.toLocaleString();
         document.getElementById('sources-list').innerHTML = html;
     }
+
     function updateUI() {
         const lim = document.getElementById('limit-range').value, sk = document.getElementById('target-system').value, conf = sys[sk];
         document.getElementById('limit-val').innerText = lim;
+        
         const wl = document.getElementById('whitelist-input').value.split('\n').map(d => d.trim().toLowerCase()).filter(d => d);
         const cats = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(c => c.value);
+        
         const filtered = exportData.filter(i => cats.includes(i.c) && !wl.includes(i.d.toLowerCase())).slice(0, lim);
         document.getElementById('stat-selected').innerText = filtered.length.toLocaleString();
+        
         const url = GITHUB_BASE + conf.f;
         document.getElementById('router-link').href = url; document.getElementById('router-link').innerText = url;
         document.getElementById('preview-title').innerText = `Vorschau (${conf.f})`;
+        
         let txt = "";
         filtered.slice(0, 10).forEach(i => {
             if (conf.raw) txt += (sk === "json" ? JSON.stringify(i) : `${i.d},${i.c}`) + "<br>";
@@ -131,16 +175,21 @@
         });
         document.getElementById('preview-area').innerHTML = txt || "Keine Domains gefunden.";
     }
+
     function downloadConfig() {
         const sk = document.getElementById('target-system').value, conf = sys[sk];
         const wl = document.getElementById('whitelist-input').value.split('\n').map(d => d.trim().toLowerCase()).filter(d => d);
         const cats = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(c => c.value);
         const filtered = exportData.filter(i => cats.includes(i.c) && !wl.includes(i.d.toLowerCase())).slice(0, document.getElementById('limit-range').value);
+        
         let content = "";
         if (conf.raw) content = sk === "json" ? JSON.stringify(filtered, null, 2) : "domain,cat\n" + filtered.map(i => `${i.d},${i.c}`).join("\n");
         else content = filtered.map(i => `${conf.p || ""}${i.d}${conf.s || ""}`).join("\n");
-        const a = document.createElement('a'); a.href = window.URL.createObjectURL(new Blob([content])); a.download = conf.f; a.click();
+        
+        const blob = new Blob([content], { type: 'text/plain' });
+        const a = document.createElement('a'); a.href = window.URL.createObjectURL(blob); a.download = conf.f; a.click();
     }
+
     document.getElementById('limit-range').addEventListener('input', updateUI);
     document.querySelectorAll('input[type="checkbox"]').forEach(c => c.addEventListener('change', updateUI));
     init();
