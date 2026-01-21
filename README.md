@@ -3,11 +3,17 @@
 ![Cover Image: Ein symbolischer digitaler Schutzwall, der ein sicheres Zuhause vor den unkontrollierten Datenstroemen des Internets abschirmt]
 *(Cover Bild Platzhalter)*
 
+## 🚀 Der Live-Konfigurator (GUI)
+Hier koennen Sie die Filter-Pipeline konfigurieren, Whitelists pflegen und Direkt-Links generieren:
+👉 **[https://albertuszerk.github.io/inetfilterlist/web/](https://albertuszerk.github.io/inetfilterlist/web/)**
+
+---
+
 ## 1. Vision und Urheberschaft
 Die **X-iNet Multi-Format Filter Pipeline** ist das Ergebnis einer engen Symbiose zwischen menschlicher Schutzvision und technologischer Unterstuetzung. Es wurde geschaffen, um die digitale Souveraenitaet in den Haenden derer zu belassen, die Verantwortung tragen.
 
-* **Autor:** albertuszerk [cite: 2026-01-21]
-* **KI-Thought-Partner:** Gemini (Google AI) [cite: 2026-01-21]
+* **Autor:** albertuszerk
+* **KI-Thought-Partner:** Gemini (Google AI)
 
 ---
 
