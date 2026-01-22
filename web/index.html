@@ -29,9 +29,7 @@
         }
         @keyframes pulse-grid { 0% { transform: translateY(0); } 100% { transform: translateY(30px); } }
         select option { background-color: #1a1c2c !important; color: white !important; }
-        
-        /* Stylischer Placeholder (Ghost-Text) */
-        textarea::placeholder { color: rgba(255, 255, 255, 0.2); font-style: italic; }
+        textarea::placeholder { color: rgba(255, 255, 255, 0.2); font-style: italic; white-space: pre-line; }
     </style>
 </head>
 <body class="pb-20">
@@ -81,7 +79,7 @@
                     <div class="form-control">
                         <label class="label"><span class="label-text text-white/70">Whitelist (Ausnahmen)</span></label>
                         <textarea id="whitelist-input" class="textarea textarea-bordered bg-black/30 h-28 font-mono text-sm border-white/10" 
-                                  placeholder="facebook.com&#10;instagram.com&#10;tiktok.com" 
+                                  placeholder="Beispiel:&#10;facebook.com&#10;instagram.com&#10;tiktok.com" 
                                   oninput="saveAndRefresh()"></textarea>
                     </div>
                 </div>
@@ -124,7 +122,9 @@
             </div>
         </main>
     </div>
-    <footer class="text-center py-12 opacity-20 text-[9px] tracking-[0.4em] uppercase font-bold">X-iNET Dashboard &bull; v1.1 &bull; 2026</footer>
+    <footer class="text-center py-12 opacity-20 text-[9px] tracking-[0.4em] uppercase font-bold">
+        X-iNET Filter Dashboard &bull; v1.1 &bull; <span id="current-year">2026</span>
+    </footer>
 </div>
 
 <script>
@@ -146,6 +146,9 @@
     function fmt(num) { return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'"); }
 
     async function init() {
+        // Jahr dynamisch setzen
+        document.getElementById('current-year').innerText = new Date().getFullYear();
+
         const group = document.getElementById('cat-group');
         group.innerHTML = categories.map(c => `
             <div class="flex justify-between items-center bg-white/5 p-3 rounded-2xl border border-white/5">
@@ -155,7 +158,6 @@
         `).join('');
         try {
             const savedWhitelist = localStorage.getItem('xinet_whitelist_storage');
-            // FIX: Behebt das Wiederherstellen alter Texte durch striktes Laden
             document.getElementById('whitelist-input').value = savedWhitelist || '';
             const sRes = await fetch('../output/status.json'), dRes = await fetch('../output/xinet_data.json');
             masterStats = await sRes.json(); exportData = await dRes.json();
