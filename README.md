@@ -75,7 +75,7 @@ Wir untersuchen ueber **5'800'000** Webseiten (Stand 2026) und suchen die wichti
 
 ---
 
-### 10. Wie werden die "wichtigsten" Webseiten berechnet?
+## 10. Wie werden die "wichtigsten" Webseiten berechnet?
 Die technische Basis fuer diese Auswahl bildet das **Tranco-Ranking**. Dies ist ein hochpräzises Ranking, das die Beliebtheit von Domains ueber einen Zeitraum von 30 Tagen mittelt. Dabei werden Daten aus verschiedenen Quellen (wie z.B. Cisco Umbrella, Majestic und Alexa) kombiniert, um ein stabiles und manipulationssicheres Abbild des weltweiten Datenverkehrs zu erhalten.
 
 **Die Logik dahinter:**
@@ -91,14 +91,16 @@ Ein häufiges Missverständnis bei DNS-Filtern ist, dass eine längere Liste aut
 * **Effizienz-Vergleich:** Theoretisch kann es diese optimierte Kurzliste mit ungefilterten Listen von 150'000 Einträgen aufnehmen, ohne die CPU deines Routers unnoetig zu belasten.
 * **Zielgerichteter Schutz:** Du sparst Speicherplatz fuer "verlassene Waldwege" des Webs und behältst die volle Geschwindigkeit deines Netzwerks bei.
 
-### 11. Integration & Direkt-Link fuer Router
-Um diese Intelligenz ohne komplizierte Umwege nutzbar zu machen, generiert das System einen **Direkt-Link**. Dieser Link ist so aufbereitet, dass dein Router ihn unmittelbar verstehen und die gefilterten Daten verarbeiten kann. Damit entfällt das manuelle Sortieren von Listen – die Pipeline liefert das fertige Ergebnis direkt an dein Ziel-System.
-
 | Kategorie | Kapazitaet | Was es macht |
 | :--- | :--- | :--- |
 | **Flint 2 (Plain)** | [max. 150'000] | Schnellster Schutz fuer deinen Router. |
 | **Universal HOSTS** | [max. 1'000'000+] | Passt fast ueberall. |
 | **AdGuard Home** | [max. 200'000] | Blockiert Werbung sehr gut. |
+
+---
+
+## 11. Integration & Direkt-Link fuer Router
+Um diese Intelligenz ohne komplizierte Umwege nutzbar zu machen, generiert das System einen **Direkt-Link**. Dieser Link ist so aufbereitet, dass dein Router ihn unmittelbar verstehen und die gefilterten Daten verarbeiten kann. Damit entfällt das manuelle Sortieren von Listen – die Pipeline liefert das fertige Ergebnis direkt an dein Ziel-System.
 
 ---
 *Stand: 22. Januar 2026 – Gemeinsam fuer ein sicheres Internet.*
