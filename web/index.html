@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>X-iNet Dashboard v1.1</title>
+    <title>X-iNet filter for families v1.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@3.9.4/dist/full.css" rel="stylesheet" type="text/css" />
     <style>
@@ -33,23 +33,27 @@
         }
 
         select option { background-color: #1a1c2c !important; color: white !important; }
-
-        /* NEU: Tooltip-Style fuer Kopieren */
-        .copy-confirm { transition: opacity 0.3s ease; }
     </style>
 </head>
 <body class="pb-20">
 
-<div class="cyber-banner w-full py-12 mb-10 shadow-2xl">
+<div class="cyber-banner w-full py-16 mb-10 shadow-2xl">
     <div class="cyber-grid"></div>
-    <div class="relative z-10 max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-        <div class="text-center md:text-left">
-            <h1 class="text-5xl font-black italic tracking-tighter text-white uppercase">X-iNET <span class="text-success neon-text">v1.1</span></h1>
-            <p class="text-xs uppercase tracking-[0.3em] font-bold text-success/60 mt-2">Multi-Format Filter Pipeline</p>
-        </div>
-        <div class="flex gap-4">
-            <div class="badge badge-outline border-success/30 text-success text-[10px] py-3 px-4 uppercase font-bold tracking-widest">System Online</div>
-            <div class="badge badge-outline border-info/30 text-info text-[10px] py-3 px-4 uppercase font-bold tracking-widest">Pipeline Ready</div>
+    <div class="relative z-10 max-w-6xl mx-auto px-6">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-8">
+            <div class="text-center md:text-left max-w-3xl">
+                <h1 class="text-4xl md:text-5xl font-black italic tracking-tighter text-white uppercase leading-none">
+                    X-iNet filter for families <span class="text-success neon-text">v1.1</span>
+                </h1>
+                <p class="text-xs uppercase tracking-[0.4em] font-bold text-success/70 mt-4">Multi-Format Filter Pipeline</p>
+                <p class="mt-6 text-sm leading-relaxed text-white/50 max-w-2xl italic border-l-2 border-success/30 pl-4">
+                    Die BLACKLIST - ein unsichtbarer Schutz-Schild fuer dein Internet zu Hause. Sie sammelt automatisch Listen mit schlechten Webseiten und sorgt dafuer, dass dein Router diese blockiert, damit alle in der Familie sicher im Netz surfen koennen.
+                </p>
+            </div>
+            <div class="flex flex-col gap-3">
+                <div class="badge badge-outline border-success/30 text-success text-[10px] py-3 px-4 uppercase font-bold tracking-widest">System Online</div>
+                <div class="badge badge-outline border-info/30 text-info text-[10px] py-3 px-4 uppercase font-bold tracking-widest text-center">Pipeline Ready</div>
+            </div>
         </div>
     </div>
 </div>
@@ -130,7 +134,7 @@
                     </div>
                     <div class="flex flex-col items-center">
                         <button onclick="copyToClipboard()" class="btn btn-circle btn-sm btn-ghost hover:bg-success/20 text-success" title="Link kopieren">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
                         </button>
                         <span id="copy-status" class="text-[8px] uppercase font-black text-success opacity-0 transition-opacity">Kopiert!</span>
                     </div>
@@ -232,7 +236,6 @@
         const a = document.createElement('a'); a.href = window.URL.createObjectURL(new Blob([content])); a.download = conf.f; a.click();
     }
 
-    // NEU: Clipboard-Funktion
     function copyToClipboard() {
         const link = document.getElementById('router-link').href;
         navigator.clipboard.writeText(link).then(() => {
