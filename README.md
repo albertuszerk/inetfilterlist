@@ -1,7 +1,5 @@
 # X-iNet Multi-Format Filter Pipeline
-
-![Cover Image: Ein digitaler Schutz-Schild, der ein sicheres Zuhause vor den Gefahren des Internets bewahrt]
-*(/images/banner01.png)*
+| ![Cover Image: Ein digitaler Schutz-Schild, der ein sicheres Zuhause vor den Gefahren des Internets bewahrt] (/images/banner01.png)|
 
 **Die X-iNet Multi-Format Filter Pipeline ist wie ein unsichtbarer Schutz-Schild fuer dein Internet zu Hause. Sie sammelt automatisch Listen mit schlechten Webseiten und sorgt dafuer, dass dein Router diese blockiert, damit alle in der Familie sicher im Netz surfen koennen.**
 
