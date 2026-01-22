@@ -29,6 +29,9 @@
         }
         @keyframes pulse-grid { 0% { transform: translateY(0); } 100% { transform: translateY(30px); } }
         select option { background-color: #1a1c2c !important; color: white !important; }
+        
+        /* Stylischer Placeholder (Ghost-Text) */
+        textarea::placeholder { color: rgba(255, 255, 255, 0.2); font-style: italic; }
     </style>
 </head>
 <body class="pb-20">
@@ -39,7 +42,7 @@
         <div class="flex flex-col md:flex-row justify-between items-center gap-8">
             <div class="text-center md:text-left max-w-3xl">
                 <h1 class="text-4xl md:text-5xl font-black italic tracking-tighter text-white uppercase leading-none">
-                    X-iNet <span class="text-xl md:text-2xl font-light normal-case opacity-80 text-success neon-text">filter for families v1.1</span>
+                    X-iNet filter <span class="text-xl md:text-2xl font-light normal-case opacity-80 text-success neon-text">for families v1.1</span>
                 </h1>
                 <p class="text-xs uppercase tracking-[0.4em] font-bold text-success/70 mt-4">Multi-Format Filter Pipeline</p>
                 <p class="mt-6 text-sm leading-relaxed text-white/50 max-w-2xl italic border-l-2 border-success/30 pl-4">
@@ -76,8 +79,10 @@
                         <input type="range" id="limit-range" min="1000" max="150000" step="1000" value="10000" class="range range-success range-xs">
                     </div>
                     <div class="form-control">
-                        <label class="label"><span class="label-text text-white/70">Whitelist</span></label>
-                        <textarea id="whitelist-input" class="textarea textarea-bordered bg-black/30 h-28 font-mono text-sm border-white/10" placeholder="facebook.com" oninput="saveAndRefresh()"></textarea>
+                        <label class="label"><span class="label-text text-white/70">Whitelist (Ausnahmen)</span></label>
+                        <textarea id="whitelist-input" class="textarea textarea-bordered bg-black/30 h-28 font-mono text-sm border-white/10" 
+                                  placeholder="facebook.com&#10;instagram.com&#10;tiktok.com" 
+                                  oninput="saveAndRefresh()"></textarea>
                     </div>
                 </div>
             </div>
@@ -150,8 +155,8 @@
         `).join('');
         try {
             const savedWhitelist = localStorage.getItem('xinet_whitelist_storage');
-            // WHITELIST-FIX: Setzt den Wert auf einen leeren String, falls nichts vorhanden ist
-            document.getElementById('whitelist-input').value = savedWhitelist !== null ? savedWhitelist : '';
+            // FIX: Behebt das Wiederherstellen alter Texte durch striktes Laden
+            document.getElementById('whitelist-input').value = savedWhitelist || '';
             const sRes = await fetch('../output/status.json'), dRes = await fetch('../output/xinet_data.json');
             masterStats = await sRes.json(); exportData = await dRes.json();
             renderStats(); updateUI();
