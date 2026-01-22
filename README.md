@@ -39,7 +39,7 @@ Hier siehst du, wie das System aussieht und wie es funktioniert:
 | | | |
 | :--- | :--- | :--- |
 | ![Bild 1: Quellen](/images/screen07.png) | ![Bild 2: Daten Export](/images/screen11.png) | ![Bild 3: Daten Limiter und Screen](/images/screen09.png) |
-| ![Bild 4: X-iNet Multi-Format Filter Pipeline](/images/screen12.png) | ![Bild 5: Datenquellen und Priorisierung](/images/screen06.png) | ![Bild 6: Unterstuetzte Router](/images/screen02.png) | ![Bild 7: Quellen Status](/images/screen04.png) |
+| ![Bild 4: X-iNet Multi-Format Filter Pipeline](/images/screen12.png) | ![Bild 5: Datenquellen und Priorisierung](/images/screen06.png) | ![Bild 6: Unterstuetzte Router](/images/screen02.png) |
 
 ---
 
