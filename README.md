@@ -1,7 +1,7 @@
 # X-iNet Multi-Format Filter Pipeline
 
 ![Cover Image: Ein digitaler Schutz-Schild, der ein sicheres Zuhause vor den Gefahren des Internets bewahrt]
-*(Cover Bild Platzhalter)*
+*(/images/banner01.png)*
 
 **Die X-iNet Multi-Format Filter Pipeline ist wie ein unsichtbarer Schutz-Schild fuer dein Internet zu Hause. Sie sammelt automatisch Listen mit schlechten Webseiten und sorgt dafuer, dass dein Router diese blockiert, damit alle in der Familie sicher im Netz surfen koennen.**
 
@@ -37,8 +37,8 @@ Hier siehst du, wie das System aussieht und wie es funktioniert:
 
 | | | |
 | :--- | :--- | :--- |
-| ![Bild 1: Der Plan](/images/bild1.png) | ![Bild 2: Die Webseite](/images/bild2.png) | ![Bild 3: Der Router](/images/bild3.png) |
-| ![Bild 4: Die Listen](/images/bild4.png) | ![Bild 5: Das Programm](/images/bild5.png) | ![Bild 6: Das Netzwerk](/images/bild6.png) |
+| ![Bild 1: Quellen](/images/screen07.png) | ![Bild 2: Daten Export](/images/screen11.png) | ![Bild 3: Daten Limiter und Screen](/images/screen09.png) |
+| ![Bild 4: X-iNet Multi-Format Filter Pipeline](/images/screen12.png) | ![Bild 5: Datenquellen und Priorisierung](/images/screen06.png) | ![Bild 6: Unterstuetzte Router](/images/screen02.png) | ![Bild 7: Quellen Status](/images/screen04.png) |
 
 ---
 
@@ -79,4 +79,4 @@ Wir untersuchen ueber **5'800'000** Webseiten und suchen die wichtigsten fuer di
 | **AdGuard Home** | [max. 200'000] | Blockiert Werbung sehr gut. |
 
 ---
-*Stand: 21. Januar 2026 – Gemeinsam fuer ein sicheres Internet.*
+*Stand: 22. Januar 2026 – Gemeinsam fuer ein sicheres Internet.*
