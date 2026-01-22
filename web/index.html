@@ -27,11 +27,7 @@
             mask-image: linear-gradient(to bottom, black, transparent);
             animation: pulse-grid 8s linear infinite;
         }
-        @keyframes pulse-grid {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(30px); }
-        }
-
+        @keyframes pulse-grid { 0% { transform: translateY(0); } 100% { transform: translateY(30px); } }
         select option { background-color: #1a1c2c !important; color: white !important; }
     </style>
 </head>
@@ -43,7 +39,7 @@
         <div class="flex flex-col md:flex-row justify-between items-center gap-8">
             <div class="text-center md:text-left max-w-3xl">
                 <h1 class="text-4xl md:text-5xl font-black italic tracking-tighter text-white uppercase leading-none">
-                    X-iNet filter for families <span class="text-success neon-text">v1.1</span>
+                    X-iNet <span class="text-xl md:text-2xl font-light normal-case opacity-80 text-success neon-text">filter for families v1.1</span>
                 </h1>
                 <p class="text-xs uppercase tracking-[0.4em] font-bold text-success/70 mt-4">Multi-Format Filter Pipeline</p>
                 <p class="mt-6 text-sm leading-relaxed text-white/50 max-w-2xl italic border-l-2 border-success/30 pl-4">
@@ -59,61 +55,35 @@
 </div>
 
 <div class="max-w-6xl mx-auto px-4 space-y-6">
-    
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div class="stats glass-card shadow-2xl">
-            <div class="stat">
-                <div class="stat-title text-[10px] uppercase font-bold text-white/40">Verarbeitete Domains</div>
-                <div class="stat-value text-success text-3xl" id="stat-total">0</div>
-            </div>
-        </div>
-        <div class="stats glass-card shadow-2xl">
-            <div class="stat border-white/5">
-                <div class="stat-title text-[10px] uppercase font-bold text-white/40">Einzigartige Filter</div>
-                <div class="stat-value text-info text-3xl" id="stat-filters">0</div>
-            </div>
-        </div>
-        <div class="stats glass-card shadow-2xl">
-            <div class="stat">
-                <div class="stat-title text-[10px] uppercase font-bold text-white/40">Aktive Auswahl</div>
-                <div class="stat-value text-warning text-3xl" id="stat-selected">0</div>
-            </div>
-        </div>
+        <div class="stats glass-card shadow-2xl"><div class="stat"><div class="stat-title text-[10px] uppercase font-bold text-white/40">Domains</div><div class="stat-value text-success text-3xl" id="stat-total">0</div></div></div>
+        <div class="stats glass-card shadow-2xl"><div class="stat border-white/5"><div class="stat-title text-[10px] uppercase font-bold text-white/40">Filter</div><div class="stat-value text-info text-3xl" id="stat-filters">0</div></div></div>
+        <div class="stats glass-card shadow-2xl"><div class="stat"><div class="stat-title text-[10px] uppercase font-bold text-white/40">Aktiv</div><div class="stat-value text-warning text-3xl" id="stat-selected">0</div></div></div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
         <aside class="lg:col-span-4 space-y-6">
-            <div class="card glass-card p-6 rounded-3xl">
-                <h3 class="text-[10px] font-bold uppercase mb-4 tracking-widest text-white/50">Quellen-Status (Live)</h3>
-                <div id="sources-list" class="space-y-4 text-xs">
-                    <div class="flex items-center gap-3"><span class="loading loading-ring loading-xs"></span> Syncing...</div>
-                </div>
-            </div>
-
-            <div class="card glass-card p-6 rounded-3xl">
-                <h3 class="text-[10px] font-bold uppercase mb-4 tracking-widest text-white/50">1. Schutz-Level (Toggles)</h3>
-                <div class="grid grid-cols-1 gap-3" id="cat-group"></div>
-            </div>
+            <div class="card glass-card p-6 rounded-3xl"><h3 class="text-[10px] font-bold uppercase mb-4 tracking-widest text-white/50">Quellen-Status</h3><div id="sources-list" class="space-y-4 text-xs"></div></div>
+            <div class="card glass-card p-6 rounded-3xl"><h3 class="text-[10px] font-bold uppercase mb-4 tracking-widest text-white/50">1. Schutz-Level</h3><div class="grid grid-cols-1 gap-3" id="cat-group"></div></div>
         </aside>
 
         <main class="lg:col-span-8 space-y-6">
             <div class="card glass-card p-8 rounded-3xl">
-                <h3 class="text-[10px] font-bold uppercase mb-6 tracking-widest text-white/50">2. Daten-Limiter & Whitelist</h3>
+                <h3 class="text-[10px] font-bold uppercase mb-6 tracking-widest text-white/50">2. Limiter & Whitelist</h3>
                 <div class="space-y-8">
                     <div class="form-control">
-                        <label class="label"><span class="label-text text-white/70">Domain Ranking Limit: <span class="text-success font-bold" id="limit-val">10'000</span></span></label>
+                        <label class="label"><span class="label-text text-white/70">Ranking Limit: <span class="text-success font-bold" id="limit-val">10'000</span></span></label>
                         <input type="range" id="limit-range" min="1000" max="150000" step="1000" value="10000" class="range range-success range-xs">
                     </div>
                     <div class="form-control">
-                        <label class="label"><span class="label-text text-white/70">Whitelist (Ausnahmen)</span></label>
-                        <textarea id="whitelist-input" class="textarea textarea-bordered bg-black/30 h-28 font-mono text-sm border-white/10 focus:border-success/50" placeholder="facebook.com&#10;instagram.com" oninput="saveAndRefresh()"></textarea>
+                        <label class="label"><span class="label-text text-white/70">Whitelist</span></label>
+                        <textarea id="whitelist-input" class="textarea textarea-bordered bg-black/30 h-28 font-mono text-sm border-white/10" placeholder="facebook.com" oninput="saveAndRefresh()"></textarea>
                     </div>
                 </div>
             </div>
 
             <div class="card glass-card p-8 rounded-3xl">
-                <h3 class="text-[10px] font-bold uppercase mb-6 tracking-widest text-white/50">3. Ziel-System & Direkt-Link</h3>
+                <h3 class="text-[10px] font-bold uppercase mb-6 tracking-widest text-white/50">3. Ziel-System</h3>
                 <div class="flex flex-col md:flex-row gap-4 items-end">
                     <div class="form-control w-full">
                         <select id="target-system" class="select select-bordered bg-black/40 w-full border-white/10" onchange="updateUI()">
@@ -121,38 +91,35 @@
                             <option value="flint2" selected>GL.iNet GL-MT6000 (Flint 2) [max. 150'000]</option>
                             <option value="adguard">AdGuard Home [max. 200'000]</option>
                             <option value="pihole">Pi-hole DNS [max. 500'000]</option>
+                            <option value="bind">BIND RPZ [max. 100'000]</option>
                             <option value="mikrotik">Mikrotik RouterOS [max. 20'000]</option>
+                            <option value="pfsense">pfSense Unbound [max. 150'000]</option>
+                            <option value="unbound">Standard Unbound [max. 150'000]</option>
+                            <option value="csv">CSV Daten-Export [Ranking]</option>
+                            <option value="json">JSON Daten Feed [Rohdaten]</option>
                         </select>
                     </div>
-                    <button class="btn btn-success px-10 shadow-lg shadow-success/10 uppercase tracking-widest font-bold text-xs" onclick="downloadConfig()">Download</button>
+                    <button class="btn btn-success px-10 font-bold text-xs" onclick="downloadConfig()">Download</button>
                 </div>
-                
                 <div class="mt-6 p-4 bg-black/50 border border-white/5 rounded-2xl flex items-center justify-between gap-4">
                     <div class="overflow-hidden">
-                        <div class="text-[9px] uppercase opacity-40 mb-2 tracking-[0.2em] font-bold">Direkt-Link fuer den Router [cite: 2026-01-20]:</div>
-                        <a id="router-link" class="text-xs text-info font-mono truncate block hover:text-success transition-colors" target="_blank" href="#">Wird generiert...</a>
+                        <div class="text-[9px] uppercase opacity-40 mb-2 font-bold">Direkt-Link [cite: 2026-01-20]:</div>
+                        <a id="router-link" class="text-xs text-info font-mono truncate block" target="_blank" href="#">Wird generiert...</a>
                     </div>
                     <div class="flex flex-col items-center">
-                        <button onclick="copyToClipboard()" class="btn btn-circle btn-sm btn-ghost hover:bg-success/20 text-success" title="Link kopieren">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
-                        </button>
-                        <span id="copy-status" class="text-[8px] uppercase font-black text-success opacity-0 transition-opacity">Kopiert!</span>
+                        <button onclick="copyToClipboard()" class="btn btn-circle btn-sm btn-ghost hover:bg-success/20 text-success"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg></button>
+                        <span id="copy-status" class="text-[8px] uppercase font-black text-success opacity-0">Kopiert!</span>
                     </div>
                 </div>
             </div>
 
             <div class="card glass-card p-8 rounded-3xl overflow-hidden">
-                <h3 class="text-[10px] font-bold uppercase mb-4 tracking-widest text-success/80">Vorschau (Preview)</h3>
-                <div class="bg-black/60 p-5 rounded-2xl font-mono text-[11px] leading-relaxed text-success/70 max-h-56 overflow-y-auto border border-white/5" id="preview-area">
-                    Scanning database...
-                </div>
+                <h3 class="text-[10px] font-bold uppercase mb-4 tracking-widest text-success/80">Vorschau</h3>
+                <div class="bg-black/60 p-5 rounded-2xl font-mono text-[11px] text-success/70 max-h-56 overflow-y-auto border border-white/5" id="preview-area"></div>
             </div>
         </main>
     </div>
-
-    <footer class="text-center py-12 opacity-20 text-[9px] tracking-[0.4em] uppercase font-bold">
-        X-iNET Dashboard &bull; v1.1 &bull; 2026
-    </footer>
+    <footer class="text-center py-12 opacity-20 text-[9px] tracking-[0.4em] uppercase font-bold">X-iNET Dashboard &bull; v1.1 &bull; 2026</footer>
 </div>
 
 <script>
@@ -163,7 +130,12 @@
         flint2: { f: "xinet_flint2.hosts", p: "" },
         adguard: { f: "xinet_adguard.txt", p: "||", s: "^" },
         pihole: { f: "xinet_pihole.txt", p: "" },
-        mikrotik: { f: "xinet_mikrotik.rsc", p: "/ip dns static add name=", s: " address=0.0.0.0" }
+        bind: { f: "xinet_bind.rpz", p: "", s: " CNAME ." },
+        mikrotik: { f: "xinet_mikrotik.rsc", p: "/ip dns static add name=", s: " address=0.0.0.0" },
+        pfsense: { f: "xinet_pfsense.conf", p: "local-zone: \"", s: "\" static" },
+        unbound: { f: "xinet_unbound.conf", p: "local-data: \"", s: " A 0.0.0.0\"" },
+        csv: { f: "xinet_data.csv", p: "" },
+        json: { f: "xinet_data.json", raw: true }
     };
     const categories = ["violence", "sex", "vpn_proxy", "gambling", "ads_tracking", "social"];
     function fmt(num) { return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'"); }
@@ -176,11 +148,10 @@
                 <input type="checkbox" checked value="${c}" class="toggle toggle-success toggle-sm" onchange="updateUI()">
             </div>
         `).join('');
-
         try {
             const savedWhitelist = localStorage.getItem('xinet_whitelist_storage');
-            if (savedWhitelist !== null) document.getElementById('whitelist-input').value = savedWhitelist;
-
+            // WHITELIST-FIX: Setzt den Wert auf einen leeren String, falls nichts vorhanden ist
+            document.getElementById('whitelist-input').value = savedWhitelist !== null ? savedWhitelist : '';
             const sRes = await fetch('../output/status.json'), dRes = await fetch('../output/xinet_data.json');
             masterStats = await sRes.json(); exportData = await dRes.json();
             renderStats(); updateUI();
@@ -196,18 +167,7 @@
         document.getElementById('stat-total').innerText = fmt(masterStats.total_domains);
         let fc = 0, html = "";
         for (const [c, n] of Object.entries(masterStats.categories)) {
-            fc += n; 
-            html += `
-                <div class="flex justify-between items-center text-[11px] mb-3">
-                    <span class="flex items-center gap-3">
-                        <span class="relative flex h-2 w-2">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
-                        </span>
-                        <span class="tracking-widest font-bold opacity-70">${c.toUpperCase()}</span>
-                    </span>
-                    <span class="font-mono opacity-40 text-[10px]">${fmt(n)}</span>
-                </div>`;
+            fc += n; html += `<div class="flex justify-between items-center text-[11px] mb-3"><span class="flex items-center gap-3"><span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-success"></span></span><span class="tracking-widest font-bold opacity-70">${c.toUpperCase()}</span></span><span class="font-mono opacity-40 text-[10px]">${fmt(n)}</span></div>`;
         }
         document.getElementById('stat-filters').innerText = fmt(fc);
         document.getElementById('sources-list').innerHTML = html;
@@ -220,10 +180,10 @@
         const cats = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(c => c.value);
         const filtered = exportData.filter(i => cats.includes(i.c) && !wl.includes(i.d.toLowerCase())).slice(0, lim);
         document.getElementById('stat-selected').innerText = fmt(filtered.length);
-        const url = GITHUB_BASE + conf.f;
-        document.getElementById('router-link').href = url; document.getElementById('router-link').innerText = url;
+        document.getElementById('router-link').href = GITHUB_BASE + conf.f; 
+        document.getElementById('router-link').innerText = GITHUB_BASE + conf.f;
         let txt = "";
-        filtered.slice(0, 15).forEach(i => txt += `${conf.p || ""}${i.d}${conf.s || ""}\n`);
+        filtered.slice(0, 15).forEach(i => txt += conf.raw ? JSON.stringify(i) + "\n" : `${conf.p || ""}${i.d}${conf.s || ""}\n`);
         document.getElementById('preview-area').innerText = txt || "Bereitschaft hergestellt.";
     }
 
@@ -232,19 +192,16 @@
         const wl = document.getElementById('whitelist-input').value.split('\n').map(d => d.trim().toLowerCase()).filter(d => d);
         const cats = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(c => c.value);
         const filtered = exportData.filter(i => cats.includes(i.c) && !wl.includes(i.d.toLowerCase())).slice(0, document.getElementById('limit-range').value);
-        let content = filtered.map(i => `${conf.p || ""}${i.d}${conf.s || ""}`).join("\n");
+        let content = filtered.map(i => conf.raw ? JSON.stringify(i) : `${conf.p || ""}${i.d}${conf.s || ""}`).join("\n");
         const a = document.createElement('a'); a.href = window.URL.createObjectURL(new Blob([content])); a.download = conf.f; a.click();
     }
 
     function copyToClipboard() {
-        const link = document.getElementById('router-link').href;
-        navigator.clipboard.writeText(link).then(() => {
-            const status = document.getElementById('copy-status');
-            status.style.opacity = "1";
-            setTimeout(() => { status.style.opacity = "0"; }, 2000);
+        navigator.clipboard.writeText(document.getElementById('router-link').href).then(() => {
+            const s = document.getElementById('copy-status'); s.style.opacity = "1";
+            setTimeout(() => s.style.opacity = "0", 2000);
         });
     }
-
     document.getElementById('limit-range').addEventListener('input', updateUI);
     init();
 </script>
