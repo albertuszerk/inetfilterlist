@@ -1,12 +1,12 @@
 {
-    "total_domains": 5880433,
+    "total_domains": 5948971,
     "categories": {
-        "ads_tracking": 49660,
+        "ads_tracking": 50222,
         "social": 715,
+        "sex": 4933753,
         "vpn_proxy": 6038,
-        "sex": 4864956,
         "gambling": 32197,
         "violence": 266
     },
-    "last_update": "2026-01-25T23:23:45.316465"
+    "last_update": "2026-02-01T23:28:49.672368"
 }
